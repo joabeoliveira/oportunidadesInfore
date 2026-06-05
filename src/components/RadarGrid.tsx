@@ -5,10 +5,9 @@ import { Search, ExternalLink, SlidersHorizontal, Tag, Layers, CheckCircle2, Ale
 interface RadarGridProps {
   initialOfertas: Oferta[];
   isConfigured: boolean;
-  supabaseUrl?: string | null;
 }
 
-export default function RadarGrid({ initialOfertas, isConfigured, supabaseUrl }: RadarGridProps) {
+export default function RadarGrid({ initialOfertas, isConfigured }: RadarGridProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPlatform, setSelectedPlatform] = useState('Todas');
   const [minDiscount, setMinDiscount] = useState<number | null>(null);
@@ -77,7 +76,7 @@ export default function RadarGrid({ initialOfertas, isConfigured, supabaseUrl }:
       {isConfigured && (
         <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex items-center gap-2 text-xs text-emerald-800 mb-4 shadow-2xs">
           <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-          <span>Sincronizado com Supabase Database: <strong className="font-mono">{supabaseUrl}</strong></span>
+          <span>Sincronizado com banco de dados.</span>
         </div>
       )}
 

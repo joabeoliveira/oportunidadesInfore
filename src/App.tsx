@@ -6,7 +6,6 @@ import { Radio, RefreshCw, Send, HelpCircle, Copy, Check, Sparkles } from 'lucid
 export default function App() {
   const [ofertas, setOfertas] = useState<Oferta[]>([]);
   const [isConfigured, setIsConfigured] = useState<boolean>(false);
-  const [supabaseUrl, setSupabaseUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'docs'>('dashboard');
@@ -25,7 +24,6 @@ export default function App() {
       if (statusRes.ok) {
         const statusData = await statusRes.json();
         setIsConfigured(statusData.configured);
-        setSupabaseUrl(statusData.url);
       }
 
       // Fetch offers
@@ -259,7 +257,6 @@ export default function App() {
               <RadarGrid
                 initialOfertas={ofertas}
                 isConfigured={isConfigured}
-                supabaseUrl={supabaseUrl}
               />
             )}
           </div>
