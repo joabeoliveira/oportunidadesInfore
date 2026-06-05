@@ -1,0 +1,23 @@
+# Git
+.git
+.gitignore
+
+# Dependencies and outputs
+node_modules
+dist
+build
+coverage
+
+# Logs
+*.log
+npm-debug.log*
+
+# Local env and secrets
+.env
+.env.*
+!.env.example
+
+# Editor/system
+.vscode
+.DS_Store
+Thumbs.db
