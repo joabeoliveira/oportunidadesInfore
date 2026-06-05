@@ -1,0 +1,6 @@
+{
+  "name": "Radar de Oportunidades",
+  "description": "Painel de ofertas diárias integradas com n8n e Supabase.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
