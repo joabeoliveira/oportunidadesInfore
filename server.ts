@@ -9,7 +9,10 @@ import { Oferta } from './src/types.ts';
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
+
+// Basic hardening: avoid exposing Express fingerprint.
+app.disable('x-powered-by');
 
 // Enable JSON body requests up to 10mb for mass inserts
 app.use(express.json({ limit: '10mb' }));
@@ -125,6 +128,12 @@ app.get('/api/ofertas', async (req, res) => {
 // 3. Webhook endpoint to clear and batch insert offers
 app.post('/api/webhooks/ofertas', async (req, res) => {
   try {
+    const expectedAuthorization = process.env.WEBHOOK_SECRET || 'Bearer INFORE_MVP_TOKEN_2026';
+
+    if (req.headers.authorization !== expectedAuthorization) {
+      return res.status(401).json({ error: 'Acesso não autorizado' });
+    }
+
     const ofertasPayload = req.body;
 
     if (!Array.isArray(ofertasPayload)) {
@@ -160,7 +169,7 @@ app.post('/api/webhooks/ofertas', async (req, res) => {
     const { error: deleteError } = await supabaseClient
       .from('ofertas')
       .delete()
-      .neq('titulo', 'placeholder_title_that_never_matches_anything_deletion');
+      .neq('id', '00000000-0000-0000-0000-000000000000');
 
     if (deleteError) {
       console.error('Error clearing "ofertas" table in Supabase:', deleteError);
