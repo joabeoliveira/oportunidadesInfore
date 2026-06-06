@@ -1,0 +1,1813 @@
+{
+  "name": "BUSCA DE PRODUTOS MERCADO LIVRE",
+  "nodes": [
+    {
+      "parameters": {
+        "fieldToSplitOut": "nomeProduto, imagemProduto, urlOriginal, precoOriginal, precoAtual, desconto",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        560
+      ],
+      "id": "c3d07bc8-8089-4f10-905e-7637fc2be27a",
+      "name": "SEPARAR PRODUTOS"
+    },
+    {
+      "parameters": {
+        "type": "random"
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        576,
+        336
+      ],
+      "id": "d5935e32-09ed-493b-aba2-88b6ff726bae",
+      "name": "MISTURAR"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.URL }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "cookie",
+              "value": "={{ $('COOKIES').item.json[\"cookies-mercadolivre\"] }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        800,
+        336
+      ],
+      "id": "be2edae9-322a-41f7-b73f-7291e58d1222",
+      "name": "CARREGA HTML",
+      "retryOnFail": true,
+      "waitBetweenTries": 1500
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "nomeProduto",
+              "cssSelector": ".poly-card__content > h3 > a",
+              "returnValue": "html",
+              "returnArray": true
+            },
+            {
+              "key": "imagemProduto",
+              "cssSelector": "img.poly-component__picture",
+              "returnValue": "attribute",
+              "attribute": "src",
+              "returnArray": true
+            },
+            {
+              "key": "urlOriginal",
+              "cssSelector": ".poly-card__content > h3 > a",
+              "returnValue": "attribute",
+              "attribute": "href",
+              "returnArray": true
+            },
+            {
+              "key": "precoOriginal",
+              "cssSelector": "s.andes-money-amount--previous",
+              "returnArray": true
+            },
+            {
+              "key": "precoAtual",
+              "cssSelector": ".poly-price__current .andes-money-amount",
+              "returnArray": true
+            },
+            {
+              "key": "desconto",
+              "cssSelector": ".andes-money-amount__discount",
+              "returnArray": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        1024,
+        336
+      ],
+      "id": "7287f3fc-e894-413c-8a67-8cba50c1afa6",
+      "name": "EXTRAI PRODUTOS"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3f378733-6b15-47df-a3a7-47b0208c159c",
+              "leftValue": "={{ $json.nomeProduto }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "6f7c46d4-5c74-4cd4-9b0b-9f8276654bef",
+              "leftValue": "={{ $json.imagemProduto }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "78570aa7-2f87-4f74-b83f-52929bcafc6b",
+              "leftValue": "={{ $json.precoAtual }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "77f916c7-d4b9-476d-a4c8-7761fab7b884",
+              "leftValue": "={{ $json.urlOriginal }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "ed435c15-d735-4859-b466-9a9c5bb43ba8",
+              "leftValue": "={{ $json.urlOriginal }}",
+              "rightValue": "click1.mercadolivre",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "514abb1b-b3d4-40c7-ae34-b6e6300342b9",
+              "leftValue": "={{ $json.urlOriginal }}",
+              "rightValue": "mercadolivre.com.br",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        128,
+        560
+      ],
+      "id": "71111dc9-fe78-4e73-bf43-04b2e727651c",
+      "name": "FILTRA INVALIDOS"
+    },
+    {
+      "parameters": {
+        "type": "random"
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        576,
+        560
+      ],
+      "id": "1c837d87-6fdb-4df8-a4bb-cade57b11f7e",
+      "name": "MISTURAR NOVAMENTE"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nfunction formatarPreco(preco_original, preco_atual, desconto) {\n  return `${preco_original || \"\"}\\n${preco_atual || \"\"} ${desconto || \"\"}`;\n}\n\nfor (const item of $input.all()) {\n  // Pega o link, garantindo que seja uma string\n  const urlOriginal = item.json.urlOriginal ? item.json.urlOriginal.toString() : \"\";\n\n  item.json.preco = formatarPreco(item.json.precoOriginal,\n                                 item.json.precoAtual,\n                                 item.json.desconto);\n  \n  // 1. Extração do ID (Correção aqui)\n  // A regex /MLB-?\\d+/i aceita \"MLB123\" E \"MLB-123\"\n  const matchId = urlOriginal.match(/MLB-?\\d+/i);\n  \n  if (matchId) {\n    // Se tiver hífen, removemos para padronizar tudo como \"MLB12345\" no banco\n    item.json.idProduto = matchId[0].replace('-', '').toUpperCase();\n  } else {\n    item.json.idProduto = \"SEM_ID\";\n  }\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        352,
+        560
+      ],
+      "id": "17291a56-da35-4810-9494-690d2e557779",
+      "name": "EXTRAIR PRODUCTID"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.urlOriginal = item.json.urlOriginal.split('?')[0];\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        560
+      ],
+      "id": "1c77ce75-49bd-4384-9b91-6e786e8b6218",
+      "name": "LIMPAR URL PRODUTO"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        416,
+        16
+      ],
+      "id": "1a9a0f23-6e1f-43d5-89a0-8638361110e5",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "content": "# ATUALIZAÇÃO DO COOKIE\n## SOMENTE SE FOR NECESSÁRIO",
+        "height": 192,
+        "width": 1008
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        -16
+      ],
+      "id": "2fa2c22b-583d-48e4-9aac-89120dc650c1",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1D9YsC03POyg88qBgWA2pksdG0kUP4XTQoQWv8kH4IHE",
+          "mode": "list",
+          "cachedResultName": "Modelo - Mercado Livre",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1D9YsC03POyg88qBgWA2pksdG0kUP4XTQoQWv8kH4IHE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Categoria",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1D9YsC03POyg88qBgWA2pksdG0kUP4XTQoQWv8kH4IHE/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "status",
+              "lookupValue": "ATIVO"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        352,
+        336
+      ],
+      "id": "b75b44b6-5959-4335-a51e-a8323e6f7ae1",
+      "name": "LISTAR CATEGORIAS",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "wHIpEHjK5qArJxcM",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "cookies-mercadolivre",
+        "key": "cookies-mercadolivre",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        128,
+        336
+      ],
+      "id": "90b2f83d-7763-4118-b993-f20d8b31cff6",
+      "name": "COOKIES",
+      "credentials": {
+        "redis": {
+          "id": "o0KWvwVpXjNLNanZ",
+          "name": "Infore"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "cookies-mercadolivre",
+        "value": "ml_affiliates_hub_visit_count=2; _d2id=47103581-63df-40ac-9bf8-f8e332afd4f4; orgnickp=TOPMASTERSHOP; orguseridp=696595480; ftid=Y1KCQfmLX4fK0Bnpo10GVC7e1I6is24J-1759180096738; cookiesPreferencesNotLogged=%7B%22categories%22%3A%7B%22advertising%22%3Atrue%2C%22functionality%22%3Anull%2C%22performance%22%3Anull%2C%22traceability%22%3Atrue%7D%7D; _tt_enable_cookie=1; _ttp=01K6BNV9H4MZ24B7RWCTJZJYCD_.tt.2; ttcsid_CPKRQ8RC77U8LS0GABLG=1759181121062::Yy9IVjGBGbdibq1i6pHE.1.1759181423679.0; _pin_unauth=dWlkPU5tUTRNRFJrWXprdFlUQTFaUzAwTURGa0xUaG1ZalF0TlRabE5EUTVOelJoWkRnNQ; _hjSessionUser_720738=eyJpZCI6ImJkOTU4Y2IwLWE4OTgtNTU4NC04ODVjLTY5ZThmMWQzZGRhMiIsImNyZWF0ZWQiOjE3NTkxODc3ODA2MDksImV4aXN0aW5nIjp0cnVlfQ==; lo_uid=1759191266456-1im2vg2be4p; _gcl_au=1.1.739982990.1773874021; _twpid=tw.1773874021570.11002379860807779; _fbp=fb.2.1773874022327.376198970724650376; _cq_duid=1.1773874025.rDtbibK1J8tvBnFT; QSI_SI_d4ikElJeWDP7fzo_intercept=true; _hjSessionUser_1160754=eyJpZCI6IjhhMzdkNzIzLWNjZDUtNWI2ZS1hNTgwLTVlYjI5OWJkZGVmNyIsImNyZWF0ZWQiOjE3NTkxODAxNDkwOTEsImV4aXN0aW5nIjp0cnVlfQ==; tooltips-configuration={\"compats_highlight_tooltip\":{\"view_cnt\":1,\"close_cnt\":0,\"view_time\":1777844968,\"close_time\":0}}; __rtbh.uid=%7B%22eventType%22%3A%22uid%22%2C%22id%22%3A%22696595480%22%2C%22expiryDate%22%3A%222027-05-03T21%3A55%3A12.149Z%22%7D; __rtbh.lid=%7B%22eventType%22%3A%22lid%22%2C%22id%22%3A%22ES5UaVWaoxWl1KycUAfm%22%2C%22expiryDate%22%3A%222027-05-03T21%3A55%3A12.149Z%22%7D; cto_bundle=kq3xDl9iRGlSOEtsdjJzN0VsS2h3UG84WFVZUjVPZHV6OXl4ekdxVzhVNWhFdXFGVjdWUm5NeXpESldZNUZlYmJiS2h4eGJHdVhwckZOS2pjTmFZJTJCalZBRWVpZjhoejlHYkYwN3VlalFFVmJTUDZoNkNueU1wYTlqa3J0TVJDazQyTEFETWxjS1VXTlI4cyUyRk5BVjRuWlhPdyUyRmFkcTZrcFJnaFdRbmdYTyUyRnF1ajNqcyUzRA; _uetvid=b765ae6096a911ee86dd2d495b415ad9; _derived_epik=dj0yJnU9eWpheTlYWmJ3T3NueXlQUkM4eWVmUE1YQUtlSm03Zk8mbj0yLVZSQWJtTEhRUks1R3hreF83dWt3Jm09MSZ0PUFBQUFBR24zeEVjJnJtPTEmcnQ9QUFBQUFHbjN4RWMmc3A9Mg; _cq_session=4.1777844907312.D6RyeTwuPnzlDyyp.1777845315451; ttcsid_CFVSC2JC77U0ARCJTCJ0=1777844905964::svUZJrDz9YR-92oA_dRy.10.1777845323574.1; c_Z1l9PLD=1; inferredZipcode=true; LAST_SEARCH=televisÃ£o%2055%20polegadas%20samsung%204k%20qled%20; _bmstate=b11aaaa21104b45efcc1009fbc20be0416ad0463a90e3e5c180c36e940fde753%3B2%3Ba41f9003cdc6893b364d1cd330ba4c813d3d1b89d7cd493aa25b2d0f8bfcebb2%3B1780600661%3B9f4db057cfd601244e0bf8d9a9a8662562739d145d3360d1a84afedbc40474bb; _bmc=b11aaaa21104b45efcc1009fbc20be0416ad0463a90e3e5c180c36e940fde753%3B191; main_domain=; main_attributes=; categories=; backend_dejavu_info=j%3A%7B%7D; last_query=papel%20chamex%20a4; category=MLB105297; _csrf=dDauM7k0lPmwNJOneQ8U2CYj; _mldataSessionId=92566a1d-5a11-4425-9885-2ed359f8bd8c; c_Z22Y2rV=1; _hjSession_720738=eyJpZCI6ImFhNWVjNGQ5LTAzZjQtNGJkMC04ZTA5LWFjMTM4YjY2N2YwZiIsImMiOjE3ODA2MDA4ODAxNzEsInMiOjAsInIiOjAsInNiIjowLCJzciI6MCwic2UiOjAsImZzIjowLCJzcCI6MH0=; g_state={\"i_l\":0,\"i_ll\":1780600880441,\"i_b\":\"BXeta9+rovB2Dqv+gr/0dlPYP02gp7wpxoMdvoBimQw\",\"i_e\":{\"enable_itp_optimization\":0},\"i_et\":1780518465737}; _hjSession_1160754=eyJpZCI6ImQwNjk0MTAzLWZiYjItNGE0MS05Yjc0LWZkZjA5Mzc1YTNmNiIsImMiOjE3ODA2MDA5MDY3MjYsInMiOjAsInIiOjAsInNiIjowLCJzciI6MCwic2UiOjAsImZzIjowLCJzcCI6MH0=; ssid=ghy-060415-RUnbOBPgJfO2Gi3RHGIHDlcxnI48zz-__-696595480-__-1875295326443--RRR_0-RRR_0; orguserid=0t4tt9949T7d; cookiesPreferencesLogged=%7B%22userId%22%3A696595480%2C%22categories%22%3A%7B%22advertising%22%3Atrue%2C%22functionality%22%3Anull%2C%22performance%22%3Anull%2C%22traceability%22%3Atrue%7D%7D; cookiesPreferencesLoggedFallback=%7B%22userId%22%3A696595480%2C%22categories%22%3A%7B%22advertising%22%3Atrue%2C%22functionality%22%3Anull%2C%22performance%22%3Anull%2C%22traceability%22%3Atrue%7D%7D; cp=21031250; _gcl_gs=2.1.k1$i1780600927$u124475286; nsa_rotok=eyJhbGciOiJSUzI1NiIsImtpZCI6IjMiLCJ0eXAiOiJKV1QifQ.eyJpZGVudGlmaWVyIjoiZjVjMDAzYzEtNmZiZi00MjdmLTgwZjMtOTkwZjJjZWY3NmNhIiwicm90YXRpb25faWQiOiI3Y2QwOWYyNy05NjVkLTQwNzktYjQzOS1mMzBkMDgwM2FmNjYiLCJwbGF0Zm9ybSI6Ik1MIiwicm90YXRpb25fZGF0ZSI6MTc4MDYwMTUyNywiZXhwIjoxNzgzMTkyOTI3LCJqdGkiOiIzOGM4YWEyZi0yNTY3LTRhMGQtODNmZS1jOGNmNTVkY2ZjM2MiLCJpYXQiOjE3ODA2MDA5MjcsInN1YiI6ImY1YzAwM2MxLTZmYmYtNDI3Zi04MGYzLTk5MGYyY2VmNzZjYSJ9.GUpH6Xer_wkrae2El-D33L6i3GrhHT7wNGw0ig2iFsBo-hPzVauXduIp76YR55UH-SY6BANzp0xZhzm4G8YtD4gaNtNWGFzoc32ed9sccG8K7GtdtDCyuGutKzAG9XFeZTKRElO5mZ2AZMM7cceijvomMgU7goSLPAVVjLyYoeU1dn0jMN_tW2lgmSoBAKk8SRBmsXJ0E7gJTJmNAAlu7IsWS1I7o_CJcOHUv2OPdFVK45koYQSeaNKzccfQDAOJTfzTfWPobtp6oh5a5_bufr1u8Ys8tRpPzj24EYahcVnEN1ifwEhoxiadNM6ClIM7Xom9ASyFgR65OdgE7Mjqgg; ml_cart-quantity=0; _gcl_aw=GCL.1780600982.CjwKCAjwxITRBhBYEiwA6mZm7aDWSTW-_dgA-nL4S5RMQuGg0hh7WBwQVPLKNyA8ya4zrACbawT4ixoCDS8QAvD_BwE; hide-cookie-banner=696595480-COOKIE_PREFERENCES_ALREADY_SET; ttcsid_C9SJ5SBC77UADFMAH8T0=1780601111918::EQMV7cWqFiic8ed3vjWz.10.1780601140342.1; _snoopy=eyJmaW5nZXJwcmludCI6InJqZHV5SE8xT3pOWlRwNkFrUVR6aURhQktRaHNHTjZSSEdxN3hkcnFRNmJpVDhvNmlLZTlHVUx4SVhjRVZLR3FGdTFDYWhQTktDOVBzT2gvZHhQKzh6WUlOcm5oZTZmUGtoWFZDL2Y1dHdmdGxuTDVzMUhFSGdTS0p6QUZqUEt6Q3VhS2FHc1Z5bUhCVjdIbHFSeENSTFhLTHpqUDJSdUk5cXp2akQzamtSRUE1cDY0TE5BPSIsImtleSI6InJrT2NudkpBV0orY1JOdjh5SDl3Z3VnOWtvbnNxUy9VNjN2THJRNkhXQkhVQXRHNW0zbTRNSWVyQlo4TWt4LzZaQWRXQ2VsT3U0RFoxYXpPQ1hUdTg4bS9kTElHUWp3cyJ9; ttcsid=1780601111919::0pLilg7aaabu9iPhGmhc.12.1780601140343.0::1.24274.28424::152695.5.893.134::143371.15.0"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        640,
+        16
+      ],
+      "id": "8d532ac2-5a9c-46d5-bc96-232cd1d83a6f",
+      "name": "set-cookies-mercadolivre",
+      "credentials": {
+        "redis": {
+          "id": "o0KWvwVpXjNLNanZ",
+          "name": "Infore"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -96,
+        336
+      ],
+      "id": "c16f1c22-01a4-4b15-a637-6446baf89c89",
+      "name": "TODO DIA AS 7"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -80,
+        864
+      ],
+      "id": "ec46024b-1d53-4b14-a4d3-6753ad74091e",
+      "name": "TODO DIA AS 8"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "cookies-mercadolivre",
+        "key": "cookies-mercadolivre",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        144,
+        864
+      ],
+      "id": "52d853e6-e3d6-4cfc-9f97-90630d368ec4",
+      "name": "COOKIES1",
+      "credentials": {
+        "redis": {
+          "id": "o0KWvwVpXjNLNanZ",
+          "name": "Infore"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        192,
+        1088
+      ],
+      "id": "3a7dd79a-a353-46a1-ab07-1b6a12ede2b1",
+      "name": "LOOP"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.mercadolivre.com.br/affiliate-program/api/v2/affiliates/createLink",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json, text/plain, */*"
+            },
+            {
+              "name": "accept-language",
+              "value": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7"
+            },
+            {
+              "name": "device-memory",
+              "value": "16"
+            },
+            {
+              "name": "downlink",
+              "value": "10"
+            },
+            {
+              "name": "dpr",
+              "value": "1"
+            },
+            {
+              "name": "ect",
+              "value": "4g"
+            },
+            {
+              "name": "newrelic",
+              "value": "eyJ2IjpbMCwxXSwiZCI6eyJ0eSI6IkJyb3dzZXIiLCJhYyI6Ijk4OTU4NiIsImFwIjoiMTgzNDg4Njc5MSIsImlkIjoiNDYwMzFmZGI4MmI4MjlmOCIsInRyIjoiOGY4Y2Q0MmMwZTFlMjZmYTNmYTE0ODI0YTE3YTQ3NDIiLCJ0aSI6MTc2NTk3MjY2OTIyOCwidGsiOiIxNzA5NzA3In19"
+            },
+            {
+              "name": "origin",
+              "value": "https://www.mercadolivre.com.br"
+            },
+            {
+              "name": "priority",
+              "value": "u=1, i"
+            },
+            {
+              "name": "referer",
+              "value": "https://www.mercadolivre.com.br/afiliados/linkbuilder"
+            },
+            {
+              "name": "rtt",
+              "value": "50"
+            },
+            {
+              "name": "sec-ch-ua",
+              "value": "\"Google Chrome\";v=\"143\", \"Chromium\";v=\"143\", \"Not A(Brand\";v=\"24\""
+            },
+            {
+              "name": "sec-ch-ua-mobile",
+              "value": "?0"
+            },
+            {
+              "name": "sec-ch-ua-platform",
+              "value": "\"Windows\""
+            },
+            {
+              "name": "sec-fetch-dest",
+              "value": "empty"
+            },
+            {
+              "name": "sec-fetch-mode",
+              "value": "cors"
+            },
+            {
+              "name": "sec-fetch-site",
+              "value": "same-origin"
+            },
+            {
+              "name": "traceparent",
+              "value": "00-8f8cd42c0e1e26fa3fa14824a17a4742-46031fdb82b829f8-01"
+            },
+            {
+              "name": "tracestate",
+              "value": "1709707@nr=0-1-989586-1834886791-46031fdb82b829f8----1765972669228"
+            },
+            {
+              "name": "user-agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "viewport-width",
+              "value": "1365"
+            },
+            {
+              "name": "x-csrf-token",
+              "value": "s2Ai6xVt-33BdnE5tNJ6Hfq5XYRc6tqFoxwU"
+            },
+            {
+              "name": "x-newrelic-id",
+              "value": "XQ4OVF5VGwIHVFdVBwQBVlE="
+            },
+            {
+              "name": "cookie",
+              "value": "={{ $('COOKIES1').item.json[\"cookies-mercadolivre\"] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"urls\": [\n    \"{{ $json.urlOriginal }}\"\n  ],\n  \"tag\": \"{{ $('CONFIG').item.json.tagAfiliado }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        640,
+        1088
+      ],
+      "id": "ad5e509f-9175-41f2-88df-810c360ebae6",
+      "name": "GERAR LINK DE AFILIADO",
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        416,
+        1088
+      ],
+      "id": "33baddb5-6738-4975-a0a1-939352cbccac",
+      "name": "WAIT",
+      "webhookId": "8bc46d68-699b-46b8-ba1d-828d8bb78aaa"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        656,
+        912
+      ],
+      "id": "db414412-95d7-4f0d-a7e6-687ccd2d2702",
+      "name": "END"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1D9YsC03POyg88qBgWA2pksdG0kUP4XTQoQWv8kH4IHE",
+          "mode": "list",
+          "cachedResultName": "Modelo - Mercado Livre",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1D9YsC03POyg88qBgWA2pksdG0kUP4XTQoQWv8kH4IHE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 107117282,
+          "mode": "list",
+          "cachedResultName": "Produtos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1D9YsC03POyg88qBgWA2pksdG0kUP4XTQoQWv8kH4IHE/edit#gid=107117282"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "status"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": false
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -32,
+        1088
+      ],
+      "id": "e56eba46-d79e-43da-9748-616f9fdaf76c",
+      "name": "CARREGAR PRODUTOS",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "wHIpEHjK5qArJxcM",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4fbd8d78-a146-485d-83b0-21a5eca8cad9",
+              "name": "tagAfiliado",
+              "value": "topmastershop",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -240,
+        1088
+      ],
+      "id": "ccb22c28-09d9-423c-a243-d74674368630",
+      "name": "CONFIG"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  urlAfiliado: $input.first().json.urls[0].short_url,\n  idProduto: $('LOOP').first().json.idProduto\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        864,
+        1152
+      ],
+      "id": "03b58881-3562-4009-8641-4a654987f588",
+      "name": "MAPEIA DADOS PARA PLANILHA"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://site-infore.yg64ke.easypanel.host/api/webhooks/ofertas",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "8cfcc04cdd73e0c2cf8956e20911c3c3bb9b23a900297b10"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  $input.all().map(item => {\n    const d = item.json;\n    const toNumber = (v) => {\n      if (v === null || v === undefined) return 0;\n      const s = String(v).replace(/\\./g, '').replace(',', '.').replace(/[^\\d.-]/g, '');\n      return Number(s) || 0;\n    };\n    return {\n      titulo: String(d.nomeProduto || '').trim(),\n      preco_original: toNumber(d.precoOriginal),\n      preco_desconto: toNumber(d.precoAtual),\n      url_afiliado: String(d.urlAfiliado || '').trim(),\n      imagem_url: String(d.imagemProduto || '').trim(),\n      plataforma: 'Mercado Livre'\n    };\n  })\n}}",
+        "options": {}
+      },
+      "id": "2d91ac21-3ba4-43ed-b3a8-98c95fcbee96",
+      "name": "ENVIAR PARA API OPORTUNIDADES",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        416,
+        2192
+      ],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "*/8 8-21 * * *"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -80,
+        1776
+      ],
+      "id": "39ae5546-90c0-4cc7-bc05-6f5a9f1cd542",
+      "name": "ACIONA A CADA 8 MIN DE 9 AS 23",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1D9YsC03POyg88qBgWA2pksdG0kUP4XTQoQWv8kH4IHE",
+          "mode": "list",
+          "cachedResultName": "Modelo - Mercado Livre",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1D9YsC03POyg88qBgWA2pksdG0kUP4XTQoQWv8kH4IHE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 107117282,
+          "mode": "list",
+          "cachedResultName": "Produtos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1D9YsC03POyg88qBgWA2pksdG0kUP4XTQoQWv8kH4IHE/edit#gid=107117282"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "idProduto": "={{ $json.idProduto }}",
+            "nomeProduto": "={{ $json.nomeProduto }}",
+            "imagemProduto": "={{ $json.imagemProduto }}",
+            "preco": "={{ $json.preco }}",
+            "urlOriginal": "={{ $json.urlOriginal }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "idProduto",
+              "displayName": "idProduto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "nomeProduto",
+              "displayName": "nomeProduto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "imagemProduto",
+              "displayName": "imagemProduto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "preco",
+              "displayName": "preco",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "urlOriginal",
+              "displayName": "urlOriginal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "urlAfiliado",
+              "displayName": "urlAfiliado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "success",
+              "displayName": "success",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data",
+              "displayName": "data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "precoOriginal",
+              "displayName": "precoOriginal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "precoAtual",
+              "displayName": "precoAtual",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "desconto",
+              "displayName": "desconto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1024,
+        560
+      ],
+      "id": "81101bda-73fb-4d36-8025-2cd444476f46",
+      "name": "ATUALIZAR PLANILHA COM PRODUTOS",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "wHIpEHjK5qArJxcM",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1ofKS8Imht8wRqwvGSIdk7yASrZml4HfE582WC9jKoXg",
+          "mode": "list",
+          "cachedResultName": "Modelo - Mercado Livre",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ofKS8Imht8wRqwvGSIdk7yASrZml4HfE582WC9jKoXg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 107117282,
+          "mode": "list",
+          "cachedResultName": "Produtos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ofKS8Imht8wRqwvGSIdk7yASrZml4HfE582WC9jKoXg/edit#gid=107117282"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "status",
+              "lookupValue": "PRONTO"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": true
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        368,
+        1776
+      ],
+      "id": "ef4bac93-89ea-4eed-b6a5-243f3b878afb",
+      "name": "PEGAR O 1o PRODUTO DISPONIVEL",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "wHIpEHjK5qArJxcM",
+          "name": "Google Sheets account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1ofKS8Imht8wRqwvGSIdk7yASrZml4HfE582WC9jKoXg",
+          "mode": "list",
+          "cachedResultName": "Modelo - Mercado Livre",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ofKS8Imht8wRqwvGSIdk7yASrZml4HfE582WC9jKoXg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 107117282,
+          "mode": "list",
+          "cachedResultName": "Produtos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ofKS8Imht8wRqwvGSIdk7yASrZml4HfE582WC9jKoXg/edit#gid=107117282"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "idProduto": "={{ $('PEGAR O 1o PRODUTO DISPONIVEL').item.json.idProduto }}",
+            "status": "ENVIADO",
+            "success": "TRUE",
+            "data": "={{ $now }}"
+          },
+          "matchingColumns": [
+            "idProduto"
+          ],
+          "schema": [
+            {
+              "id": "idProduto",
+              "displayName": "idProduto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nomeProduto",
+              "displayName": "nomeProduto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "imagemProduto",
+              "displayName": "imagemProduto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "preco",
+              "displayName": "preco",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "urlOriginal",
+              "displayName": "urlOriginal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "urlAfiliado",
+              "displayName": "urlAfiliado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "success",
+              "displayName": "success",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data",
+              "displayName": "data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1056,
+        1776
+      ],
+      "id": "29f8f81a-d0b4-4e9a-82a3-7f2320546323",
+      "name": "ATUALIZAR O STATUS DO PRODUTO",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "wHIpEHjK5qArJxcM",
+          "name": "Google Sheets account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.BUSCAPRECOS_API_BASE_URL}}/api/v1/opportunities",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-n8n-token",
+              "value": "={{$env.N8N_API_TOKEN}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "keyval",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        704,
+        1776
+      ],
+      "id": "5ccb8971-38e5-48b7-8802-d0708a786aac",
+      "name": "ENVIO PARA GRUPO",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "amount": "={{ (Math.random() + 2) - 1 }}",
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        144,
+        1776
+      ],
+      "id": "424771e9-2f99-42f2-b8b0-5f8d538f8427",
+      "name": "Wait",
+      "webhookId": "cf537368-4c73-4afe-86e7-db1c0a4caa91",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "# PROCURA OS PRODUTOS BASEADO NAS CATEGORIAS ATIVAS",
+        "height": 80,
+        "width": 1440,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        208
+      ],
+      "id": "fcf3864f-ccf9-43f1-856f-4705debacb6f",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "# ENVIA PARA O GRUPO",
+        "height": 80,
+        "width": 1456,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        1440
+      ],
+      "id": "e668eb7f-58bf-42f4-8073-85276dbabead",
+      "name": "Sticky Note3",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "# GERA LINKS DE AFILIADOS",
+        "height": 80,
+        "width": 1456,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        752
+      ],
+      "id": "0ec59e21-0491-45c9-ba03-c3aea4aea38f",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "# ATENÇÃO\n\n## Altere aqui a sua tag de afiliado para gerar os links em seu nome\n\n### Para pegar sua tag, acesse a central de afiliados e vá em \"Administrar etiquetas\"\n\n\n[![BZEPvEB.md.jpg](https://iili.io/BZEPvEB.md.jpg)](https://freeimage.host/i/BZEPvEB)\n\n",
+        "height": 512,
+        "width": 624,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -864,
+        848
+      ],
+      "id": "adb96107-92b8-4597-a254-918cc5e97cc8",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "# ATENÇÃO\n\n## Adicione aqui o JID do grupo que você vai mandar a mensagem",
+        "height": 400,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        640,
+        1536
+      ],
+      "id": "9d198c68-6a2c-4281-912f-ec71928b37b2",
+      "name": "Sticky Note6",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1D9YsC03POyg88qBgWA2pksdG0kUP4XTQoQWv8kH4IHE",
+          "mode": "list",
+          "cachedResultName": "Modelo - Mercado Livre",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1D9YsC03POyg88qBgWA2pksdG0kUP4XTQoQWv8kH4IHE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 107117282,
+          "mode": "list",
+          "cachedResultName": "Produtos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1D9YsC03POyg88qBgWA2pksdG0kUP4XTQoQWv8kH4IHE/edit#gid=107117282"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "idProduto": "={{ $('LOOP').item.json.idProduto }}",
+            "urlAfiliado": "={{ $('LOOP').item.json.urlAfiliado }}",
+            "status": "PRONTO"
+          },
+          "matchingColumns": [
+            "idProduto"
+          ],
+          "schema": [
+            {
+              "id": "idProduto",
+              "displayName": "idProduto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nomeProduto",
+              "displayName": "nomeProduto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "imagemProduto",
+              "displayName": "imagemProduto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "preco",
+              "displayName": "preco",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "urlOriginal",
+              "displayName": "urlOriginal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "urlAfiliado",
+              "displayName": "urlAfiliado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "success",
+              "displayName": "success",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data",
+              "displayName": "data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        432,
+        912
+      ],
+      "id": "bdf28952-ae85-4eea-9514-b7fc3922ef32",
+      "name": "ATUALIZA PLANILHA COM AFILIADOS",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "wHIpEHjK5qArJxcM",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1D9YsC03POyg88qBgWA2pksdG0kUP4XTQoQWv8kH4IHE",
+          "mode": "list",
+          "cachedResultName": "Modelo - Mercado Livre",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1D9YsC03POyg88qBgWA2pksdG0kUP4XTQoQWv8kH4IHE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 107117282,
+          "mode": "list",
+          "cachedResultName": "Produtos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1D9YsC03POyg88qBgWA2pksdG0kUP4XTQoQWv8kH4IHE/edit#gid=107117282"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "status",
+              "lookupValue": "PRONTO"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": false
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        128,
+        2192
+      ],
+      "id": "ab4d006e-a0fa-4888-a678-c8ad0a9d0894",
+      "name": "PEGAR O 1o PRODUTO DISPONIVEL1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "wHIpEHjK5qArJxcM",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# ENVIA PARA O SITE OPORTUINIDADES INFORE",
+        "height": 80,
+        "width": 1456,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        2064
+      ],
+      "id": "d7fa658a-5dca-4972-b5c2-61eb41308b58",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://SEU_DOMINIO/api/v1/opportunities",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-n8n-token",
+              "value": "SEU_TOKEN_AQUI"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n{\n  \"product_name\": \"{{ $json.nomeProduto }}\",\n  \"category\": \"Geral\",\n  \"description\": \"Oferta Mercado Livre\",\n  \"price\": {{ $json.precoAtual }}\"\",\n  \"original_price\": \"{{ $json.precoOriginal }}\",\n  \"product_link\": \"{{ $json.urlAfiliado }}\",\n  \"image_url\": \"{{ $json.imagemProduto }}\",\n  \"desconto\": \"{{ $json.desconto }}\",\n  \"store_name\": \"Mercado Livre\"\n}\n}",
+        "options": {}
+      },
+      "id": "ab754509-a1bd-4c0f-bae6-85ea36c66154",
+      "name": "ENVIAR PARA API OPORTUNIDADES1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        800,
+        2208
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -96,
+        2192
+      ],
+      "id": "cc6bcd0c-5d87-4abc-adb6-6ec0ee1227f0",
+      "name": "ACIONA TODOS OS DIA 8H",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 22
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -96,
+        2496
+      ],
+      "id": "1c6227ba-78a3-4912-b62e-97aab5e88eeb",
+      "name": "ACIONA 22H - LIMPA PLANILHA",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "clear",
+        "documentId": {
+          "__rl": true,
+          "value": "1D9YsC03POyg88qBgWA2pksdG0kUP4XTQoQWv8kH4IHE",
+          "mode": "list",
+          "cachedResultName": "Modelo - Mercado Livre",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1D9YsC03POyg88qBgWA2pksdG0kUP4XTQoQWv8kH4IHE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 107117282,
+          "mode": "list",
+          "cachedResultName": "Produtos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1D9YsC03POyg88qBgWA2pksdG0kUP4XTQoQWv8kH4IHE/edit#gid=107117282"
+        },
+        "keepFirstRow": true
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        144,
+        2496
+      ],
+      "id": "294ea2d6-ae6c-4937-a550-71e8f569f14f",
+      "name": "DELETA OS PRODUTOS DA PLANILHA",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "wHIpEHjK5qArJxcM",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "SEPARAR PRODUTOS": {
+      "main": [
+        [
+          {
+            "node": "FILTRA INVALIDOS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MISTURAR": {
+      "main": [
+        [
+          {
+            "node": "CARREGA HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CARREGA HTML": {
+      "main": [
+        [
+          {
+            "node": "EXTRAI PRODUTOS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EXTRAI PRODUTOS": {
+      "main": [
+        [
+          {
+            "node": "SEPARAR PRODUTOS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FILTRA INVALIDOS": {
+      "main": [
+        [
+          {
+            "node": "EXTRAIR PRODUCTID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MISTURAR NOVAMENTE": {
+      "main": [
+        [
+          {
+            "node": "LIMPAR URL PRODUTO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EXTRAIR PRODUCTID": {
+      "main": [
+        [
+          {
+            "node": "MISTURAR NOVAMENTE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "set-cookies-mercadolivre",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LISTAR CATEGORIAS": {
+      "main": [
+        [
+          {
+            "node": "MISTURAR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "COOKIES": {
+      "main": [
+        [
+          {
+            "node": "LISTAR CATEGORIAS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LIMPAR URL PRODUTO": {
+      "main": [
+        [
+          {
+            "node": "ATUALIZAR PLANILHA COM PRODUTOS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TODO DIA AS 7": {
+      "main": [
+        [
+          {
+            "node": "COOKIES",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TODO DIA AS 8": {
+      "main": [
+        [
+          {
+            "node": "COOKIES1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LOOP": {
+      "main": [
+        [
+          {
+            "node": "ATUALIZA PLANILHA COM AFILIADOS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "WAIT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GERAR LINK DE AFILIADO": {
+      "main": [
+        [
+          {
+            "node": "MAPEIA DADOS PARA PLANILHA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WAIT": {
+      "main": [
+        [
+          {
+            "node": "GERAR LINK DE AFILIADO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "COOKIES1": {
+      "main": [
+        [
+          {
+            "node": "CONFIG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CARREGAR PRODUTOS": {
+      "main": [
+        [
+          {
+            "node": "LOOP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CONFIG": {
+      "main": [
+        [
+          {
+            "node": "CARREGAR PRODUTOS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MAPEIA DADOS PARA PLANILHA": {
+      "main": [
+        [
+          {
+            "node": "LOOP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ACIONA A CADA 8 MIN DE 9 AS 23": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PEGAR O 1o PRODUTO DISPONIVEL": {
+      "main": [
+        [
+          {
+            "node": "ENVIO PARA GRUPO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ENVIO PARA GRUPO": {
+      "main": [
+        [
+          {
+            "node": "ATUALIZAR O STATUS DO PRODUTO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "PEGAR O 1o PRODUTO DISPONIVEL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ENVIAR PARA API OPORTUNIDADES": {
+      "main": [
+        []
+      ]
+    },
+    "ATUALIZA PLANILHA COM AFILIADOS": {
+      "main": [
+        [
+          {
+            "node": "END",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PEGAR O 1o PRODUTO DISPONIVEL1": {
+      "main": [
+        [
+          {
+            "node": "ENVIAR PARA API OPORTUNIDADES",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ACIONA TODOS OS DIA 8H": {
+      "main": [
+        [
+          {
+            "node": "PEGAR O 1o PRODUTO DISPONIVEL1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ACIONA 22H - LIMPA PLANILHA": {
+      "main": [
+        [
+          {
+            "node": "DELETA OS PRODUTOS DA PLANILHA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timeSavedMode": "fixed",
+    "timezone": "America/Sao_Paulo",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "798e02aa-2abd-4450-86b8-fc3285249198",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0435f3002e081a7fea4f6b9d9fb69e6d66a9ce283c409f889ee2eb8cc504ae5a"
+  },
+  "id": "tg7WFj9u0KYfryIM",
+  "tags": []
+}
