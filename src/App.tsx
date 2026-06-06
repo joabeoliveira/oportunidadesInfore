@@ -44,7 +44,7 @@ export default function App() {
     fetchData();
     const interval = setInterval(() => {
       fetchData(false); // Fetch quietly in background
-    }, 15000); // every 15 seconds
+    }, 600000); // every 10 minutes
     return () => clearInterval(interval);
   }, []);
 
