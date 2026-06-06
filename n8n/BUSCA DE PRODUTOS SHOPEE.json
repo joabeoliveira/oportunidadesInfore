@@ -30,54 +30,6 @@
     },
     {
       "parameters": {
-        "jsCode": "// Agrupa todos os itens do batch em um único array para envio à API\n// O httpRequest não aceita expressões complexas no jsonBody, por isso agrupamos aqui\nconst ofertas = $input.all().map(item => ({\n  titulo: item.json.titulo,\n  preco_original: item.json.preco_original,\n  preco_desconto: item.json.preco_desconto,\n  url_afiliado: item.json.url_afiliado,\n  imagem_url: item.json.imagem_url,\n  plataforma: item.json.plataforma\n}));\n\n// Retorna um único item com o array no campo body\n// e preserva campos internos do primeiro item para o log na planilha\nconst primeiro = $input.first().json;\n\nreturn [{\n  json: {\n    body: ofertas,\n    _productId: primeiro._productId,\n    _commissionRate: primeiro._commissionRate,\n    _sales: primeiro._sales,\n    _searchedCategory: primeiro._searchedCategory,\n    _timestamp: primeiro._timestamp,\n    titulo: primeiro.titulo,\n    preco_original: primeiro.preco_original,\n    preco_desconto: primeiro.preco_desconto,\n    url_afiliado: primeiro.url_afiliado,\n    imagem_url: primeiro.imagem_url,\n    plataforma: primeiro.plataforma\n  }\n}];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1920,
-        832
-      ],
-      "id": "a52732d7-fa01-46e6-a32d-ae08a34ef5c3",
-      "name": "AGRUPA EM ARRAY"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "=https://site-infore.yg64ke.easypanel.host/api/webhooks/ofertas",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Authorization",
-              "value": "8cfcc04cdd73e0c2cf8956e20911c3c3bb9b23a900297b10"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ $json.body }}",
-        "options": {
-          "timeout": 30000
-        }
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
-      "position": [
-        2144,
-        832
-      ],
-      "id": "6b465ca8-514e-4f3f-86a1-d3fec0e92742",
-      "name": "ENVIA PARA API",
-      "retryOnFail": true,
-      "maxTries": 2
-    },
-    {
-      "parameters": {
         "rule": {
           "interval": [
             {
@@ -244,17 +196,110 @@
     },
     {
       "parameters": {
-        "fieldToSplitOut": "data.productOfferV2.nodes",
+        "operation": "clear",
+        "documentId": {
+          "__rl": true,
+          "value": "13T9KjHUfQoXYVY157ZCKNcx0Ds0WG0teK32U1Z_Ig88",
+          "mode": "list",
+          "cachedResultName": "Video Shopee",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13T9KjHUfQoXYVY157ZCKNcx0Ds0WG0teK32U1Z_Ig88/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1848272380,
+          "mode": "list",
+          "cachedResultName": "Produtos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13T9KjHUfQoXYVY157ZCKNcx0Ds0WG0teK32U1Z_Ig88/edit#gid=1848272380"
+        },
+        "keepFirstRow": true
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -208,
+        1136
+      ],
+      "id": "4ba6c34f-cdf1-4e45-a0fb-1e4005cac7d8",
+      "name": "LIMPA TABELA (Diário)1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "wHIpEHjK5qArJxcM",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 23
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -432,
+        1136
+      ],
+      "id": "e7e39fe9-8c09-455b-98b8-8f652a7ab7a5",
+      "name": "LIMPEZA DIÁRIA (23h)1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Tratamento de erro e log\n// CORRIGIDO: usa contexto do splitInBatches para pegar categoria correta do batch atual\nconst error = $input.first().json.error;\nconst categoria = $('PROCESSA 1 POR VEZ').item.json.Categoria;\n\nreturn [{\n  json: {\n    success: false,\n    category: categoria,\n    error: error?.message || 'Unknown error',\n    timestamp: new Date().toISOString(),\n    platform: 'Shopee'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2160,
+        1136
+      ],
+      "id": "c593a483-d2a8-498b-9ff9-f8dd024d4647",
+      "name": "TRATA ERROS1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.BUSCAPRECOS_API_BASE_URL || 'http://localhost:3000'}}/api/v1/logs/errors",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
         "options": {}
       },
-      "type": "n8n-nodes-base.splitOut",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2384,
+        1136
+      ],
+      "id": "2ce821ed-a13f-45e6-b4e5-e76727cd6a41",
+      "name": "LOGA ERRO NA API1",
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "jsCode": "const p = $input.first().json;\nconst nodes = p.data?.productOfferV2?.nodes || [];\nconst minPrice = $('⚙️ CONFIGURAÇÕES2').item.json.valorMinimo;\nconst minComm = $('⚙️ CONFIGURAÇÕES2').item.json.comissaoMinima;\nconst minSales = $('⚙️ CONFIGURAÇÕES2').item.json.minimoVendas;\nconst categoriaAtual = $('PROCESSA 1 POR VEZ').item.json.Categoria;\n\nconst mapped = nodes\n  .filter(n => {\n    const price = typeof n.price === 'number' ? n.price : parseFloat(n.price);\n    const comm = n.commissionRate || 0;\n    const sales = n.sales || 0;\n    return price > minPrice && comm >= minComm && sales >= minSales;\n  })\n  .map(n => {\n    const price = typeof n.price === 'number' ? n.price : parseFloat(n.price);\n    const comm = n.commissionRate || 0;\n    const precoDesconto = parseFloat((price * (1 - comm)).toFixed(2));\n    return {\n      titulo: n.productName || \"\",\n      preco_original: price,\n      preco_desconto: precoDesconto,\n      url_afiliado: n.offerLink || n.productLink || \"\",\n      imagem_url: n.imageUrl || \"\",\n      plataforma: \"Shopee\",\n      _productId: String(n.itemId),\n      _commissionRate: comm,\n      _sales: n.sales || 0,\n      _searchedCategory: categoriaAtual,\n      _timestamp: new Date().toISOString()\n    };\n  });\n\nreturn [{\n  json: {\n    produtos: mapped,\n    total: mapped.length,\n    hasProducts: mapped.length > 0\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         1248,
         832
       ],
-      "id": "3db6aace-9dad-494b-9bd3-137dbe17e7f1",
-      "name": "SEPARA PRODUTOS2"
+      "id": "cd4a64d4-d190-4623-9223-002a6e7a351b",
+      "name": "FILTRA E MAPEIA EM ARRAY"
     },
     {
       "parameters": {
@@ -267,59 +312,41 @@
           },
           "conditions": [
             {
-              "id": "filter-price",
-              "leftValue": "={{ $json.price.toNumber() }}",
-              "rightValue": "={{ $('⚙️ CONFIGURAÇÕES2').item.json.valorMinimo }}",
+              "id": "has-products",
+              "leftValue": "={{ $json.hasProducts }}",
+              "rightValue": "",
               "operator": {
-                "type": "number",
-                "operation": "gt"
-              }
-            },
-            {
-              "id": "filter-commission",
-              "leftValue": "={{ $json.commissionRate.toNumber() }}",
-              "rightValue": "={{ $('⚙️ CONFIGURAÇÕES2').item.json.comissaoMinima }}",
-              "operator": {
-                "type": "number",
-                "operation": "gte"
-              }
-            },
-            {
-              "id": "filter-sales",
-              "leftValue": "={{ $json.sales }}",
-              "rightValue": "={{ $('⚙️ CONFIGURAÇÕES2').item.json.minimoVendas }}",
-              "operator": {
-                "type": "number",
-                "operation": "gte"
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
               }
             }
           ],
           "combinator": "and"
-        },
-        "looseTypeValidation": true,
-        "options": {}
+        }
       },
-      "type": "n8n-nodes-base.filter",
+      "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
         1472,
         832
       ],
       "id": "286ae7bc-dfa3-4fd7-91ef-2075156406fd",
-      "name": "FILTRA PRODUTOS2"
+      "name": "POSSUI PRODUTOS?"
     },
     {
       "parameters": {
-        "jsCode": "// Mapeia os produtos para o formato da API (schema MVP)\n// CORRIGIDO: usa contexto do splitInBatches para pegar categoria correta do batch atual\nconst categoriaAtual = $('PROCESSA 1 POR VEZ').item.json.Categoria;\n\nconst resultados = $input.all().map(item => {\n  const p = item.json;\n  const preco = typeof p.price === 'number' ? p.price : parseFloat(p.price);\n  const comissao = p.commissionRate || 0;\n  const precoDesconto = parseFloat((preco * (1 - comissao)).toFixed(2));\n\n  return {\n    titulo: p.productName || \"\",\n    preco_original: preco,\n    preco_desconto: precoDesconto,\n    url_afiliado: p.offerLink || p.productLink || \"\",\n    imagem_url: p.imageUrl || \"\",\n    plataforma: \"Shopee\",\n    _productId: String(p.itemId),\n    _commissionRate: comissao,\n    _sales: p.sales || 0,\n    _searchedCategory: categoriaAtual,\n    _timestamp: new Date().toISOString()\n  };\n});\n\nreturn resultados;"
+        "fieldToSplitOut": "produtos",
+        "options": {}
       },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
       "position": [
         1696,
         832
       ],
-      "id": "cd4a64d4-d190-4623-9223-002a6e7a351b",
-      "name": "MAPEIA PARA API1"
+      "id": "3db6aace-9dad-494b-9bd3-137dbe17e7f1",
+      "name": "SEPARA PRODUTOS2"
     },
     {
       "parameters": {
@@ -341,15 +368,15 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "Id": "={{ $('AGRUPA EM ARRAY').item.json._productId }}",
-            "Nome": "={{ $('AGRUPA EM ARRAY').item.json.titulo }}",
-            "Preço": "={{ $('AGRUPA EM ARRAY').item.json.preco_original }}",
-            "Comissão": "={{ $('AGRUPA EM ARRAY').item.json._commissionRate }}",
-            "Vendas": "={{ $('AGRUPA EM ARRAY').item.json._sales }}",
-            "Link": "={{ $('AGRUPA EM ARRAY').item.json.url_afiliado }}",
-            "Imagem": "={{ $('AGRUPA EM ARRAY').item.json.imagem_url }}",
+            "Id": "={{ $json._productId }}",
+            "Nome": "={{ $json.titulo }}",
+            "Preço": "={{ $json.preco_original }}",
+            "Comissão": "={{ $json._commissionRate }}",
+            "Vendas": "={{ $json._sales }}",
+            "Link": "={{ $json.url_afiliado }}",
+            "Imagem": "={{ $json.imagem_url }}",
             "Status": "Enviado",
-            "Miniatura": "==IMAGE(\"{{ $('AGRUPA EM ARRAY').item.json.imagem_url }}\";4;400;400)"
+            "Miniatura": "==IMAGE(\"{{ $json.imagem_url }}\";4;400;400)"
           },
           "matchingColumns": [
             "Id"
@@ -446,7 +473,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        2368,
+        1920,
         832
       ],
       "id": "9770c66a-ff15-4924-a1fe-b39748f82c58",
@@ -460,97 +487,51 @@
     },
     {
       "parameters": {
-        "operation": "clear",
-        "documentId": {
-          "__rl": true,
-          "value": "13T9KjHUfQoXYVY157ZCKNcx0Ds0WG0teK32U1Z_Ig88",
-          "mode": "list",
-          "cachedResultName": "Video Shopee",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13T9KjHUfQoXYVY157ZCKNcx0Ds0WG0teK32U1Z_Ig88/edit?usp=drivesdk"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": 1848272380,
-          "mode": "list",
-          "cachedResultName": "Produtos",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13T9KjHUfQoXYVY157ZCKNcx0Ds0WG0teK32U1Z_Ig88/edit#gid=1848272380"
-        },
-        "keepFirstRow": true
-      },
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
-      "position": [
-        -208,
-        1136
-      ],
-      "id": "4ba6c34f-cdf1-4e45-a0fb-1e4005cac7d8",
-      "name": "LIMPA TABELA (Diário)1",
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "wHIpEHjK5qArJxcM",
-          "name": "Google Sheets account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "triggerAtHour": 23
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.2,
-      "position": [
-        -432,
-        1136
-      ],
-      "id": "e7e39fe9-8c09-455b-98b8-8f652a7ab7a5",
-      "name": "LIMPEZA DIÁRIA (23h)1"
-    },
-    {
-      "parameters": {
-        "jsCode": "// Tratamento de erro e log\n// CORRIGIDO: usa contexto do splitInBatches para pegar categoria correta do batch atual\nconst error = $input.first().json.error;\nconst categoria = $('PROCESSA 1 POR VEZ').item.json.Categoria;\n\nreturn [{\n  json: {\n    success: false,\n    category: categoria,\n    error: error?.message || 'Unknown error',\n    timestamp: new Date().toISOString(),\n    platform: 'Shopee'\n  }\n}];"
+        "jsCode": "const ofertas = $input.all().map(item => ({\n  titulo: item.json.titulo,\n  preco_original: item.json.preco_original,\n  preco_desconto: item.json.preco_desconto,\n  url_afiliado: item.json.url_afiliado,\n  imagem_url: item.json.imagem_url,\n  plataforma: item.json.plataforma\n}));\n\nconst primeiro = $input.first().json;\n\nreturn [{\n  json: {\n    body: ofertas,\n    _productId: primeiro._productId,\n    _commissionRate: primeiro._commissionRate,\n    _sales: primeiro._sales,\n    _searchedCategory: primeiro._searchedCategory,\n    _timestamp: primeiro._timestamp,\n    titulo: primeiro.titulo,\n    preco_original: primeiro.preco_original,\n    preco_desconto: primeiro.preco_desconto,\n    url_afiliado: primeiro.url_afiliado,\n    imagem_url: primeiro.imagem_url,\n    plataforma: primeiro.plataforma\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2160,
-        1136
+        2144,
+        832
       ],
-      "id": "c593a483-d2a8-498b-9ff9-f8dd024d4647",
-      "name": "TRATA ERROS1"
+      "id": "a52732d7-fa01-46e6-a32d-ae08a34ef5c3",
+      "name": "AGRUPA EM ARRAY"
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{$env.BUSCAPRECOS_API_BASE_URL || 'http://localhost:3000'}}/api/v1/logs/errors",
+        "url": "=https://site-infore.yg64ke.easypanel.host/api/webhooks/ofertas",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "Content-Type",
               "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "8cfcc04cdd73e0c2cf8956e20911c3c3bb9b23a900297b10"
             }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ $json }}",
-        "options": {}
+        "jsonBody": "={{ $json.body }}",
+        "options": {
+          "timeout": 30000
+        }
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        2384,
-        1136
+        2368,
+        832
       ],
-      "id": "2ce821ed-a13f-45e6-b4e5-e76727cd6a41",
-      "name": "LOGA ERRO NA API1",
-      "retryOnFail": false
+      "id": "6b465ca8-514e-4f3f-86a1-d3fec0e92742",
+      "name": "ENVIA PARA API",
+      "retryOnFail": true,
+      "maxTries": 2
     }
   ],
   "pinData": {},
@@ -572,28 +553,6 @@
         [
           {
             "node": "⚙️ CONFIGURAÇÕES2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "AGRUPA EM ARRAY": {
-      "main": [
-        [
-          {
-            "node": "ENVIA PARA API",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "ENVIA PARA API": {
-      "main": [
-        [
-          {
-            "node": "LOGA NA PLANILHA1",
             "type": "main",
             "index": 0
           }
@@ -644,61 +603,6 @@
         ]
       ]
     },
-    "PESQUISA PRODUTOS NA SHOPEE2": {
-      "main": [
-        [
-          {
-            "node": "SEPARA PRODUTOS2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "SEPARA PRODUTOS2": {
-      "main": [
-        [
-          {
-            "node": "FILTRA PRODUTOS2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "FILTRA PRODUTOS2": {
-      "main": [
-        [
-          {
-            "node": "MAPEIA PARA API1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "MAPEIA PARA API1": {
-      "main": [
-        [
-          {
-            "node": "AGRUPA EM ARRAY",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "LOGA NA PLANILHA1": {
-      "main": [
-        [
-          {
-            "node": "PROCESSA 1 POR VEZ",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "LIMPEZA DIÁRIA (23h)1": {
       "main": [
         [
@@ -724,6 +628,90 @@
     "LOGA ERRO NA API1": {
       "main": [
         []
+      ]
+    },
+    "PESQUISA PRODUTOS NA SHOPEE2": {
+      "main": [
+        [
+          {
+            "node": "FILTRA E MAPEIA EM ARRAY",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FILTRA E MAPEIA EM ARRAY": {
+      "main": [
+        [
+          {
+            "node": "POSSUI PRODUTOS?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POSSUI PRODUTOS?": {
+      "main": [
+        [
+          {
+            "node": "SEPARA PRODUTOS2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PROCESSA 1 POR VEZ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SEPARA PRODUTOS2": {
+      "main": [
+        [
+          {
+            "node": "LOGA NA PLANILHA1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LOGA NA PLANILHA1": {
+      "main": [
+        [
+          {
+            "node": "AGRUPA EM ARRAY",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AGRUPA EM ARRAY": {
+      "main": [
+        [
+          {
+            "node": "ENVIA PARA API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ENVIA PARA API": {
+      "main": [
+        [
+          {
+            "node": "PROCESSA 1 POR VEZ",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   },

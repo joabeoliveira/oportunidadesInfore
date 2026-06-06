@@ -152,9 +152,15 @@ app.post('/api/webhooks/ofertas', async (req, res) => {
       plataforma: String(o.plataforma || 'Mercado Livre').trim()
     }));
 
+    // Identify unique platforms to update in this payload
+    const platformsToUpdate = Array.from(new Set(normalizedOfertas.map(o => o.plataforma)));
+
     if (!isSupabaseConfigured()) {
-      console.log('Replacing in-memory offers with payload (unconfigured Supabase mode).');
-      inMemoryOfertas = normalizedOfertas;
+      console.log('Updating in-memory offers (unconfigured Supabase mode) for platforms:', platformsToUpdate);
+      inMemoryOfertas = [
+        ...inMemoryOfertas.filter(o => !platformsToUpdate.includes(o.plataforma)),
+        ...normalizedOfertas
+      ];
       return res.json({
         success: true,
         configured: false,
@@ -165,11 +171,11 @@ app.post('/api/webhooks/ofertas', async (req, res) => {
 
     const supabaseClient = getSupabaseClient();
 
-    // Delete all existing records
+    // Delete existing records only for the platforms present in the incoming payload
     const { error: deleteError } = await supabaseClient
       .from('ofertas')
       .delete()
-      .neq('id', '00000000-0000-0000-0000-000000000000');
+      .in('plataforma', platformsToUpdate);
 
     if (deleteError) {
       console.error('Error clearing "ofertas" table in Supabase:', deleteError);
@@ -201,7 +207,10 @@ app.post('/api/webhooks/ofertas', async (req, res) => {
     }
 
     // Also update in-memory cache to sync immediate fetches
-    inMemoryOfertas = normalizedOfertas;
+    inMemoryOfertas = [
+      ...inMemoryOfertas.filter(o => !platformsToUpdate.includes(o.plataforma)),
+      ...normalizedOfertas
+    ];
 
     return res.json({
       success: true,
