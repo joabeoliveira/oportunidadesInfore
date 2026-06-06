@@ -650,7 +650,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{\n  $input.all().map(item => {\n    const d = item.json;\n    const toNumber = (v) => {\n      if (v === null || v === undefined) return 0;\n      const s = String(v).replace(/\\./g, '').replace(',', '.').replace(/[^\\d.-]/g, '');\n      return Number(s) || 0;\n    };\n    return {\n      titulo: String(d.nomeProduto || '').trim(),\n      preco_original: toNumber(d.precoOriginal),\n      preco_desconto: toNumber(d.precoAtual),\n      url_afiliado: String(d.urlAfiliado || '').trim(),\n      imagem_url: String(d.imagemProduto || '').trim(),\n      plataforma: 'Mercado Livre'\n    };\n  })\n}}",
+        "jsonBody": "={{\n  $input.all().map(item => {\n    const d = item.json;\n    const toNumber = (v) => {\n      if (v === null || v === undefined) return 0;\n      const s = String(v).replace(/\\./g, '').replace(',', '.').replace(/[^\\d.-]/g, '');\n      return Number(s) || 0;\n    };\n    const precoStr = String(d.preco || d.Preço || '');\n    const parts = precoStr.split('\\n');\n    const originalPart = parts[0] || '';\n    const currentPart = (parts[1] || '').split(' ')[0] || '';\n    const precoOriginal = toNumber(d.precoOriginal || originalPart);\n    const precoDesconto = toNumber(d.precoAtual || currentPart || originalPart);\n    return {\n      titulo: String(d.nomeProduto || d.Nome || '').trim(),\n      preco_original: precoOriginal,\n      preco_desconto: precoDesconto,\n      url_afiliado: String(d.urlAfiliado || d.Link || '').trim(),\n      imagem_url: String(d.imagemProduto || d.Imagem || '').trim(),\n      plataforma: 'Mercado Livre'\n    };\n  })\n}}",
         "options": {}
       },
       "id": "2d91ac21-3ba4-43ed-b3a8-98c95fcbee96",
@@ -708,7 +708,10 @@
             "nomeProduto": "={{ $json.nomeProduto }}",
             "imagemProduto": "={{ $json.imagemProduto }}",
             "preco": "={{ $json.preco }}",
-            "urlOriginal": "={{ $json.urlOriginal }}"
+            "urlOriginal": "={{ $json.urlOriginal }}",
+            "precoOriginal": "={{ $json.precoOriginal }}",
+            "precoAtual": "={{ $json.precoAtual }}",
+            "desconto": "={{ $json.desconto }}"
           },
           "matchingColumns": [],
           "schema": [

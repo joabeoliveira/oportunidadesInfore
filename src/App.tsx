@@ -42,6 +42,10 @@ export default function App() {
 
   useEffect(() => {
     fetchData();
+    const interval = setInterval(() => {
+      fetchData(false); // Fetch quietly in background
+    }, 15000); // every 15 seconds
+    return () => clearInterval(interval);
   }, []);
 
   // Send interactive local mock n8n webhook payload to test

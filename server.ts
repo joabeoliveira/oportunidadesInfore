@@ -149,7 +149,7 @@ app.post('/api/webhooks/ofertas', async (req, res) => {
       preco_desconto: Number(o.preco_desconto) || 0,
       url_afiliado: String(o.url_afiliado || '#').trim(),
       imagem_url: String(o.imagem_url || '').trim(),
-      plataforma: String(o.plataforma || 'Mercado Livre').trim()
+      plataforma: String(o.plataforma || 'Desconhecido').trim()
     }));
 
     // Identify unique platforms to update in this payload
