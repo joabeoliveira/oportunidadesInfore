@@ -1,0 +1,254 @@
+{
+  "name": "AG | Amazon Discovery (Webhook)",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "amazon-discovery",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "1",
+      "name": "Webhook Discovery",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1200,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body || $json;\nconst keyword = String(body.keyword || '').trim();\nif (!keyword) {\n  throw new Error('Campo keyword e obrigatorio');\n}\n\nconst domain = String(body.domain || 'com').trim();\nconst page = Number(body.page || 1);\nconst tag = String(body.affiliateTag || '').trim();\nconst maxItems = Math.max(1, Number(body.maxItems || 30));\nconst minDelayMs = Math.max(1000, Number(body.minDelayMs || 2500));\nconst maxDelayMs = Math.max(minDelayMs, Number(body.maxDelayMs || 6000));\n\nconst query = encodeURIComponent(keyword);\nconst searchUrl = `https://www.amazon.${domain}/s?k=${query}&ref=nb_sb_noss&page=${page}`;\n\nreturn [{\n  json: {\n    keyword, domain, page, tag, maxItems, minDelayMs, maxDelayMs, searchUrl\n  }\n}];"
+      },
+      "id": "2",
+      "name": "Normalize Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -980,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{$json.searchUrl}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7"
+            },
+            {
+              "name": "Cache-Control",
+              "value": "no-cache"
+            },
+            {
+              "name": "Pragma",
+              "value": "no-cache"
+            },
+            {
+              "name": "User-Agent",
+              "value": "={{$env.AMAZON_USER_AGENT || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'}}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "string"
+            }
+          },
+          "timeout": 30000,
+          "redirect": {
+            "followRedirects": true
+          }
+        }
+      },
+      "id": "3",
+      "name": "Fetch Search Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -760,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const html = String($json.body || '');\nconst meta = $items('Normalize Input', 0, 0)[0].json;\n\nif (!html || html.length < 1000) {\n  throw new Error('HTML de busca vazio ou invalido');\n}\n\nif (/validateCaptcha|errors\\/validateCaptcha|\/captcha\//i.test(html)) {\n  throw new Error('Captcha detectado na busca Amazon');\n}\n\nconst asinRegex = /data-asin=\\\"([A-Z0-9]{10})\\\"/g;\nconst slugRegex = /href=\\\"\\/([^\\\"\\/]{1,200})\\/dp\\/([A-Z0-9]{10})/g;\nconst asinSet = new Set();\nconst slugMap = new Map();\n\nlet m;\nwhile ((m = asinRegex.exec(html)) !== null) {\n  const asin = (m[1] || '').trim();\n  if (asin) asinSet.add(asin);\n}\n\nwhile ((m = slugRegex.exec(html)) !== null) {\n  const slug = (m[1] || '').trim();\n  const asin = (m[2] || '').trim();\n  if (asin && slug && !slugMap.has(asin)) slugMap.set(asin, slug);\n}\n\nconst asins = Array.from(asinSet).slice(0, meta.maxItems);\n\nreturn asins.map((asin, idx) => {\n  const slug = slugMap.get(asin) || '';\n  return {\n    json: {\n      keyword: meta.keyword,\n      domain: meta.domain,\n      affiliateTag: meta.tag,\n      asin,\n      slug,\n      rank: idx + 1,\n      discoveredAt: new Date().toISOString(),\n      minDelayMs: meta.minDelayMs,\n      maxDelayMs: meta.maxDelayMs\n    }\n  };\n});"
+      },
+      "id": "4",
+      "name": "Extract ASINs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -540,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "5",
+      "name": "Split Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -320,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "amount": "={{Math.floor(Math.random() * (($json.maxDelayMs || 6000) - ($json.minDelayMs || 2500) + 1)) + ($json.minDelayMs || 2500)}}",
+        "unit": "milliseconds"
+      },
+      "id": "6",
+      "name": "Wait Random",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -100,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ENRICHMENT_WEBHOOK_URL || 'http://localhost:5678/webhook/amazon-enrich'}}",
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={\n  \"asin\": $json.asin,\n  \"slug\": $json.slug,\n  \"keyword\": $json.keyword,\n  \"domain\": $json.domain,\n  \"affiliateTag\": $json.affiliateTag\n}",
+        "options": {
+          "timeout": 20000
+        }
+      },
+      "id": "7",
+      "name": "Queue Enrichment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        120,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"ok\": true,\n  \"message\": \"Discovery executada\",\n  \"keyword\": $items('Normalize Input', 0, 0)[0].json.keyword,\n  \"domain\": $items('Normalize Input', 0, 0)[0].json.domain,\n  \"queued\": $items('Extract ASINs', 0, 0).length\n}"
+      },
+      "id": "8",
+      "name": "Respond Discovery",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        360,
+        320
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Discovery": {
+      "main": [
+        [
+          {
+            "node": "Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Input": {
+      "main": [
+        [
+          {
+            "node": "Fetch Search Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Search Page": {
+      "main": [
+        [
+          {
+            "node": "Extract ASINs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract ASINs": {
+      "main": [
+        [
+          {
+            "node": "Split Batches",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond Discovery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Batches": {
+      "main": [
+        [
+          {
+            "node": "Wait Random",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Discovery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Random": {
+      "main": [
+        [
+          {
+            "node": "Queue Enrichment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Queue Enrichment": {
+      "main": [
+        [
+          {
+            "node": "Split Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

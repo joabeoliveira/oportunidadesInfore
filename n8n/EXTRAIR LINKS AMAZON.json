@@ -1,0 +1,644 @@
+{
+    "name": "EXTRAIR LINKS AMAZON",
+    "nodes": [
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "triggerAtHour": 6
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1.3,
+            "position": [
+                -480,
+                -96
+            ],
+            "id": "c1411f71-4ffe-44bf-bd0c-d657ed98ea33",
+            "name": "Schedule Trigger"
+        },
+        {
+            "parameters": {
+                "documentId": {
+                    "__rl": true,
+                    "value": "1gDU0EsnXNYJRGYCgoCBoSmjoOelQ15xTFKtYiS9QhXs",
+                    "mode": "list",
+                    "cachedResultName": "Amazon products",
+                    "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gDU0EsnXNYJRGYCgoCBoSmjoOelQ15xTFKtYiS9QhXs/edit?usp=drivesdk"
+                },
+                "sheetName": {
+                    "__rl": true,
+                    "value": "gid=0",
+                    "mode": "list",
+                    "cachedResultName": "categorias",
+                    "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gDU0EsnXNYJRGYCgoCBoSmjoOelQ15xTFKtYiS9QhXs/edit#gid=0"
+                },
+                "filtersUI": {
+                    "values": [
+                        {
+                            "lookupColumn": "ativo",
+                            "lookupValue": "sim"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.googleSheets",
+            "typeVersion": 4.7,
+            "position": [
+                -80,
+                -96
+            ],
+            "id": "551ef7ce-7da2-4186-9f8e-e667972ab60c",
+            "name": "CARREGA CATEGORIAS",
+            "credentials": {
+                "googleSheetsOAuth2Api": {
+                    "id": "RFwQBgZtnTdtF19n",
+                    "name": "Google Sheets Account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "clear",
+                "documentId": {
+                    "__rl": true,
+                    "value": "1gDU0EsnXNYJRGYCgoCBoSmjoOelQ15xTFKtYiS9QhXs",
+                    "mode": "list",
+                    "cachedResultName": "Amazon products",
+                    "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gDU0EsnXNYJRGYCgoCBoSmjoOelQ15xTFKtYiS9QhXs/edit?usp=drivesdk"
+                },
+                "sheetName": {
+                    "__rl": true,
+                    "value": 231886682,
+                    "mode": "list",
+                    "cachedResultName": "produtos",
+                    "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gDU0EsnXNYJRGYCgoCBoSmjoOelQ15xTFKtYiS9QhXs/edit#gid=231886682"
+                },
+                "keepFirstRow": true
+            },
+            "type": "n8n-nodes-base.googleSheets",
+            "typeVersion": 4.7,
+            "position": [
+                -280,
+                -96
+            ],
+            "id": "e98e29a1-cb3a-4ef8-a15e-a612ffea2dcd",
+            "name": "LIMPA TABELA (Diário)",
+            "credentials": {
+                "googleSheetsOAuth2Api": {
+                    "id": "RFwQBgZtnTdtF19n",
+                    "name": "Google Sheets Account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "options": {}
+            },
+            "type": "n8n-nodes-base.splitInBatches",
+            "typeVersion": 3,
+            "position": [
+                120,
+                -96
+            ],
+            "id": "3ca75c1c-6184-46d9-841e-c304d4bac28c",
+            "name": "Loop Over Items"
+        },
+        {
+            "parameters": {
+                "amount": "={{Math.floor(Math.random() * (6000 - 2500 + 1)) + 2500}}",
+                "unit": "milliseconds"
+            },
+            "type": "n8n-nodes-base.wait",
+            "typeVersion": 1.1,
+            "position": [
+                320,
+                80
+            ],
+            "id": "88ea23b9-afe6-4718-a91a-cf6148f0a133",
+            "name": "Wait Random"
+        },
+        {
+            "parameters": {
+                "method": "GET",
+                "url": "=https://www.amazon.com.br/s?k={{encodeURIComponent($json.categoria)}}",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Accept",
+                            "value": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+                        },
+                        {
+                            "name": "Accept-Language",
+                            "value": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7"
+                        },
+                        {
+                            "name": "User-Agent",
+                            "value": "={{$env.AMAZON_USER_AGENT || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'}}"
+                        }
+                    ]
+                },
+                "options": {
+                    "response": {
+                        "response": {
+                            "responseFormat": "string"
+                        }
+                    },
+                    "timeout": 30000
+                }
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                520,
+                80
+            ],
+            "id": "cdfae91a-ff36-4446-9820-7dc352478d36",
+            "name": "PESQUISA PRODUTOS NA AMAZON"
+        },
+        {
+            "parameters": {
+                "operation": "extractHtmlContent",
+                "extractionValues": {
+                    "values": [
+                        {
+                            "key": "cardHtml",
+                            "cssSelector": "div[data-component-type=\"s-search-result\"]",
+                            "returnValue": "html",
+                            "returnArray": true
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.html",
+            "typeVersion": 1.2,
+            "position": [
+                720,
+                80
+            ],
+            "id": "7287f3fc-e894-413c-8a67-8cba50c1afa6",
+            "name": "EXTRAI CARDS HTML"
+        },
+        {
+            "parameters": {
+                "jsCode": "const cards = $json.cardHtml || [];\nconst produtos = [];\nconst categoria = $('Loop Over Items').item.json.categoria;\n\nconst cleanText = (html) => {\n  if (!html) return '';\n  return html.replace(/<[^>]*>/g, ' ').replace(/\\s+/g, ' ').trim();\n};\n\nconst decode = (s) => String(s || '')\n  .replace(/&amp;/g, '&')\n  .replace(/&quot;/g, '\"')\n  .replace(/&#39;/g, \"'\")\n  .replace(/&lt;/g, '<')\n  .replace(/&gt;/g, '>');\n\nfor (const card of cards) {\n  // Extrai Título\n  const titleMatch = card.match(/<h2[^>]*>[\\s\\S]*?<span[^>]*>([\\s\\S]*?)<\\/span>/i);\n  const title = titleMatch ? decode(cleanText(titleMatch[1])) : '';\n  \n  // Extrai Link do Produto\n  const linkMatch = card.match(/<a[^>]*class=\"[^\"]*a-link-normal[^\"]*\"[^>]*href=\"([^\"]+)\"/i) \n    || card.match(/<a[^>]*href=\"([^\"]+)\"[^>]*class=\"[^\"]*a-link-normal[^\"]*\"/i);\n  let link = linkMatch ? decode(linkMatch[1]) : '';\n  if (link && link.startsWith('/')) {\n    link = `https://www.amazon.com.br${link}`;\n  }\n  \n  // Extrai ASIN\n  const asinMatch = link.match(/\\/dp\\/([A-Z0-9]{10})/i) \n    || link.match(/\\/gp\\/product\\/([A-Z0-9]{10})/i) \n    || card.match(/data-asin=\"([A-Z0-9]{10})\"/i);\n  const asin = asinMatch ? asinMatch[1] : '';\n  \n  // Validação mínima\n  if (!title || !link || !asin) continue;\n  \n  // Preço Atual\n  const priceMatch = card.match(/<span class=\"a-offscreen\"[^>]*>([\\s\\S]*?)<\\/span>/i);\n  const priceStr = priceMatch ? cleanText(priceMatch[1]) : '';\n  \n  // Preço Antigo\n  const oldPriceMatch = card.match(/<span class=\"a-price a-text-price\"[^>]*>[\\s\\S]*?<span class=\"a-offscreen\"[^>]*>([\\s\\S]*?)<\\/span>/i);\n  const oldPriceStr = oldPriceMatch ? cleanText(oldPriceMatch[1]) : '';\n  \n  // Rating (Avaliação)\n  const ratingMatch = card.match(/a-icon-alt\">([0-9][0-9.,]*)\\s*de\\s*5/i) \n    || card.match(/a-icon-alt\">([0-9][0-9.,]*)\\s*out\\s*of\\s*5/i);\n  const rating = ratingMatch ? parseFloat(ratingMatch[1].replace(',', '.')) : 0;\n  \n  // Total de Reviews\n  const reviewsMatch = card.match(/<span class=\"a-size-base\"[^>]*>([0-9\\.]+)</i) \n    || card.match(/s-underline-text\">([0-9\\.]+)</i);\n  const reviews = reviewsMatch ? parseInt(reviewsMatch[1].replace(/\\./g, '')) : 0;\n  \n  // Tratamento de preços\n  const parsePrice = (pStr) => {\n    if (!pStr) return null;\n    let clean = pStr.replace(/R\\$/g, '').replace(/\\s/g, '').replace(/\\u00a0/g, '').trim();\n    if (clean.includes('.') && clean.includes(',')) {\n      clean = clean.replace(/\\./g, '').replace(/,/g, '.');\n    } else if (clean.includes(',')) {\n      clean = clean.replace(/,/g, '.');\n    }\n    const val = parseFloat(clean);\n    return isNaN(val) ? null : val;\n  };\n  \n  const precoAtual = parsePrice(priceStr) || 0;\n  const precoOriginal = parsePrice(oldPriceStr) || precoAtual;\n  \n  produtos.push({\n    title,\n    brand: '',\n    current_price: precoAtual,\n    original_price: precoOriginal,\n    star_rating: rating,\n    review_count: reviews,\n    product_url: link,\n    _asin: asin\n  });\n}\n\nreturn [{\n  json: {\n    produtos,\n    total: produtos.length,\n    hasProducts: produtos.length > 0\n  }\n}];"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                920,
+                80
+            ],
+            "id": "6ea91e1e-cd53-4919-a322-885526c34f3b",
+            "name": "PROCESSA PAGINA"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "strict",
+                        "version": 3
+                    },
+                    "conditions": [
+                        {
+                            "id": "has-products",
+                            "leftValue": "={{ $json.hasProducts }}",
+                            "rightValue": "",
+                            "operator": {
+                                "type": "boolean",
+                                "operation": "true",
+                                "singleValue": true
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.3,
+            "position": [
+                1120,
+                80
+            ],
+            "id": "71104fbf-a54b-4df5-ac61-672f9f9b7552",
+            "name": "POSSUI PRODUTOS?"
+        },
+        {
+            "parameters": {
+                "fieldToSplitOut": "produtos",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.splitOut",
+            "typeVersion": 1,
+            "position": [
+                1320,
+                180
+            ],
+            "id": "fe470312-d7a7-4cc9-82e8-1823a7ca2eb8",
+            "name": "SEPARA PRODUTOS"
+        },
+        {
+            "parameters": {
+                "operation": "append",
+                "documentId": {
+                    "__rl": true,
+                    "value": "1gDU0EsnXNYJRGYCgoCBoSmjoOelQ15xTFKtYiS9QhXs",
+                    "mode": "list",
+                    "cachedResultName": "Amazon products",
+                    "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gDU0EsnXNYJRGYCgoCBoSmjoOelQ15xTFKtYiS9QhXs/edit?usp=drivesdk"
+                },
+                "sheetName": {
+                    "__rl": true,
+                    "value": 231886682,
+                    "mode": "list",
+                    "cachedResultName": "produtos",
+                    "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gDU0EsnXNYJRGYCgoCBoSmjoOelQ15xTFKtYiS9QhXs/edit#gid=231886682"
+                },
+                "columns": {
+                    "mappingMode": "defineBelow",
+                    "value": {
+                        "title": "={{ $json.title ?? \"\" }}",
+                        "brand": "={{ $json.brand ?? \"\" }}",
+                        "current_price": "={{ $json.current_price ?? \"\" }}",
+                        "original_price": "={{ $json.original_price ?? \"\" }}",
+                        "star_rating": "={{ $json.star_rating  ?? \"\" }}",
+                        "review_count": "={{ $json.review_count  ?? \"\" }}",
+                        "product_url": "={{ $json.product_url  ?? \"\" }}"
+                    },
+                    "matchingColumns": [],
+                    "schema": [
+                        {
+                            "id": "title",
+                            "displayName": "title",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true
+                        },
+                        {
+                            "id": "brand",
+                            "displayName": "brand",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true
+                        },
+                        {
+                            "id": "current_price",
+                            "displayName": "current_price",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true
+                        },
+                        {
+                            "id": "original_price",
+                            "displayName": "original_price",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true
+                        },
+                        {
+                            "id": "star_rating",
+                            "displayName": "star_rating",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true
+                        },
+                        {
+                            "id": "review_count",
+                            "displayName": "review_count",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true
+                        },
+                        {
+                            "id": "product_url",
+                            "displayName": "product_url",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true
+                        }
+                    ],
+                    "attemptToConvertTypes": false,
+                    "convertFieldsToString": false
+                },
+                "options": {
+                    "useAppend": true
+                }
+            },
+            "type": "n8n-nodes-base.googleSheets",
+            "typeVersion": 4.7,
+            "position": [
+                1520,
+                180
+            ],
+            "id": "3f722f34-3b62-4c39-9b2e-1a5538d68a59",
+            "name": "GRAVAR NA TABELA",
+            "credentials": {
+                "googleSheetsOAuth2Api": {
+                    "id": "RFwQBgZtnTdtF19n",
+                    "name": "Google Sheets Account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "jsCode": "return [$input.first()];"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                320,
+                -220
+            ],
+            "id": "e44d3209-cb21-4f11-8a9d-b4feea29cbda",
+            "name": "Limita a 1 Item"
+        },
+        {
+            "parameters": {
+                "documentId": {
+                    "__rl": true,
+                    "value": "1gDU0EsnXNYJRGYCgoCBoSmjoOelQ15xTFKtYiS9QhXs",
+                    "mode": "list",
+                    "cachedResultName": "Amazon products",
+                    "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gDU0EsnXNYJRGYCgoCBoSmjoOelQ15xTFKtYiS9QhXs/edit?usp=drivesdk"
+                },
+                "sheetName": {
+                    "__rl": true,
+                    "value": 231886682,
+                    "mode": "list",
+                    "cachedResultName": "produtos",
+                    "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gDU0EsnXNYJRGYCgoCBoSmjoOelQ15xTFKtYiS9QhXs/edit#gid=231886682"
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.googleSheets",
+            "typeVersion": 4.7,
+            "position": [
+                520,
+                -220
+            ],
+            "id": "fdef2dbb-0aee-425c-8faf-72d874b44964",
+            "name": "CARREGA PRODUTOS DA PLANILHA",
+            "credentials": {
+                "googleSheetsOAuth2Api": {
+                    "id": "RFwQBgZtnTdtF19n",
+                    "name": "Google Sheets Account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "jsCode": "const ofertas = $input.all().map(item => {\n  const d = item.json;\n  \n  // Extrai o ASIN da URL do produto\n  const url = d.product_url || '';\n  const asinMatch = url.match(/\\/dp\\/([A-Z0-9]{10})/i) || url.match(/\\/gp\\/product\\/([A-Z0-9]{10})/i);\n  const asin = asinMatch ? asinMatch[1] : '';\n  \n  // Tag de Afiliado Amazon\n  const tagAfiliado = 'seutag-20'; \n  const urlAfiliado = asin ? `https://www.amazon.com.br/dp/${asin}?tag=${tagAfiliado}` : url;\n  \n  // Constrói a URL da imagem usando a CDN estática da Amazon\n  const imagemUrl = asin ? `https://images.amazon.com/images/P/${asin}.01.LZZZZZZZ.jpg` : 'https://www.amazon.com.br/favicon.ico';\n  \n  const precoOriginal = parseFloat(d.original_price) || parseFloat(d.current_price) || 0;\n  const precoDesconto = parseFloat(d.current_price) || 0;\n  \n  return {\n    titulo: String(d.title || '').trim(),\n    preco_original: precoOriginal,\n    preco_desconto: precoDesconto,\n    url_afiliado: urlAfiliado,\n    imagem_url: imagemUrl,\n    plataforma: 'Amazon'\n  };\n});\n\nreturn [{\n  json: {\n    body: ofertas\n  }\n}];"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                720,
+                -220
+            ],
+            "id": "27f80687-8572-48c4-af65-d1d63cb6af0e",
+            "name": "AGRUPA EM ARRAY"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https://site-infore.yg64ke.easypanel.host/api/webhooks/ofertas",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        },
+                        {
+                            "name": "Authorization",
+                            "value": "8cfcc04cdd73e0c2cf8956e20911c3c3bb9b23a900297b10"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={{ $json.body }}",
+                "options": {
+                    "timeout": 30000
+                }
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.3,
+            "position": [
+                920,
+                -220
+            ],
+            "id": "70ab36c9-3781-444b-ab7c-91bb09501ff1",
+            "name": "ENVIA PARA API",
+            "retryOnFail": true,
+            "maxTries": 2
+        }
+    ],
+    "pinData": {},
+    "connections": {
+        "Schedule Trigger": {
+            "main": [
+                [
+                    {
+                        "node": "LIMPA TABELA (Diário)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "LIMPA TABELA (Diário)": {
+            "main": [
+                [
+                    {
+                        "node": "CARREGA CATEGORIAS",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "CARREGA CATEGORIAS": {
+            "main": [
+                [
+                    {
+                        "node": "Loop Over Items",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Loop Over Items": {
+            "main": [
+                [
+                    {
+                        "node": "Limita a 1 Item",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Wait Random",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Wait Random": {
+            "main": [
+                [
+                    {
+                        "node": "PESQUISA PRODUTOS NA AMAZON",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "PESQUISA PRODUTOS NA AMAZON": {
+            "main": [
+                [
+                    {
+                        "node": "EXTRAI CARDS HTML",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "EXTRAI CARDS HTML": {
+            "main": [
+                [
+                    {
+                        "node": "PROCESSA PAGINA",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "PROCESSA PAGINA": {
+            "main": [
+                [
+                    {
+                        "node": "POSSUI PRODUTOS?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "POSSUI PRODUTOS?": {
+            "main": [
+                [
+                    {
+                        "node": "SEPARA PRODUTOS",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Loop Over Items",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "SEPARA PRODUTOS": {
+            "main": [
+                [
+                    {
+                        "node": "GRAVAR NA TABELA",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "GRAVAR NA TABELA": {
+            "main": [
+                [
+                    {
+                        "node": "Loop Over Items",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Limita a 1 Item": {
+            "main": [
+                [
+                    {
+                        "node": "CARREGA PRODUTOS DA PLANILHA",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "CARREGA PRODUTOS DA PLANILHA": {
+            "main": [
+                [
+                    {
+                        "node": "AGRUPA EM ARRAY",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "AGRUPA EM ARRAY": {
+            "main": [
+                [
+                    {
+                        "node": "ENVIA PARA API",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1",
+        "binaryMode": "separate",
+        "availableInMCP": false
+    },
+    "versionId": "b0b8c905-3a9e-4f7a-b155-0d7543c0b11c",
+    "meta": {
+        "templateCredsSetupCompleted": true,
+        "instanceId": "4e474214bcf60c1518d0b243ca48faad8775bf534b0cde8f194334c4a5c35e19"
+    },
+    "id": "wB3BqPxbQdr92KSB",
+    "tags": []
+}

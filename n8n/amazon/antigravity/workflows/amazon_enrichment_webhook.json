@@ -1,0 +1,291 @@
+{
+  "name": "AG | Amazon Enrichment (Webhook)",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "amazon-enrich",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "1",
+      "name": "Webhook Enrichment",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1300,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body || $json;\nconst asin = String(body.asin || '').trim();\nif (!asin || asin.length !== 10) {\n  throw new Error('ASIN invalido');\n}\n\nconst domain = String(body.domain || 'com').trim();\nconst slug = String(body.slug || '').trim();\nconst affiliateTag = String(body.affiliateTag || '').trim();\nconst keyword = String(body.keyword || '').trim();\n\nconst productUrl = slug\n  ? `https://www.amazon.${domain}/${slug}/dp/${asin}`\n  : `https://www.amazon.${domain}/dp/${asin}`;\n\nconst cookieParts = [];\nif ($env.AMAZON_SESSION_ID && $env.AMAZON_UBID_MAIN) {\n  cookieParts.push(`session-id=${$env.AMAZON_SESSION_ID}`);\n  cookieParts.push(`ubid-main=${$env.AMAZON_UBID_MAIN}`);\n}\nif ($env.AMAZON_LC_COOKIE_NAME && $env.AMAZON_LC_COOKIE_VALUE) {\n  cookieParts.push(`${$env.AMAZON_LC_COOKIE_NAME}=${$env.AMAZON_LC_COOKIE_VALUE}`);\n}\n\nreturn [{\n  json: {\n    asin, domain, slug, keyword, affiliateTag, productUrl,\n    cookieHeader: cookieParts.join('; '),\n    minDelayMs: Math.max(1000, Number(body.minDelayMs || 2500)),\n    maxDelayMs: Math.max(1000, Number(body.maxDelayMs || 6000))\n  }\n}];"
+      },
+      "id": "2",
+      "name": "Normalize Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1080,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "amount": "={{Math.floor(Math.random() * (($json.maxDelayMs || 6000) - ($json.minDelayMs || 2500) + 1)) + ($json.minDelayMs || 2500)}}",
+        "unit": "milliseconds"
+      },
+      "id": "3",
+      "name": "Wait Random",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -860,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{$json.productUrl}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7"
+            },
+            {
+              "name": "User-Agent",
+              "value": "={{$env.AMAZON_USER_AGENT || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'}}"
+            },
+            {
+              "name": "Referer",
+              "value": "={{'https://www.amazon.' + $json.domain + '/'}}"
+            },
+            {
+              "name": "Cookie",
+              "value": "={{$json.cookieHeader}}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "string"
+            }
+          },
+          "timeout": 30000,
+          "redirect": {
+            "followRedirects": true
+          }
+        }
+      },
+      "id": "4",
+      "name": "Fetch Product Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -620,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const html = String($json.body || '');\nconst req = $items('Normalize Request', 0, 0)[0].json;\n\nif (!html || html.length < 1000) {\n  throw new Error('HTML de produto vazio ou invalido');\n}\n\nconst hasCaptcha = /validateCaptcha|errors\\/validateCaptcha|\/captcha\//i.test(html);\n\nconst extract = (regex) => {\n  const m = html.match(regex);\n  return m && m[1] ? String(m[1]).replace(/\\s+/g, ' ').trim() : '';\n};\n\nconst decode = (s) => String(s || '')\n  .replace(/&amp;/g, '&')\n  .replace(/&quot;/g, String.fromCharCode(34))\n  .replace(/&#39;/g, String.fromCharCode(39))\n  .replace(/&lt;/g, '<')\n  .replace(/&gt;/g, '>');\n\nlet title = extract(/id=\\\"productTitle\\\"[^>]*>([\\s\\S]*?)<\\/span>/i);\nif (!title) title = extract(/<meta property=\\\"og:title\\\" content=\\\"([^\\\"]+)\\\"/i);\n\nlet price = extract(/id=\\\"priceblock_dealprice\\\"[^>]*>([\\s\\S]*?)<\\/span>/i)\n  || extract(/id=\\\"priceblock_ourprice\\\"[^>]*>([\\s\\S]*?)<\\/span>/i)\n  || extract(/id=\\\"priceblock_saleprice\\\"[^>]*>([\\s\\S]*?)<\\/span>/i)\n  || extract(/id=\\\"price_inside_buybox\\\"[^>]*>([\\s\\S]*?)<\\/span>/i)\n  || extract(/data-a-color=\\\"price\\\"[^>]*><span class=\\\"a-offscreen\\\">([\\s\\S]*?)<\\/span>/i);\n\nprice = decode(price).replace(/\\s+/g, ' ').trim();\n\nlet oldPrice = extract(/priceBlockStrikePriceString[^>]*>([\\s\\S]*?)<\\/span>/i)\n  || extract(/data-a-strike=\\\"true\\\"[\\s\\S]*?<span class=\\\"a-offscreen\\\">([\\s\\S]*?)<\\/span>/i);\noldPrice = decode(oldPrice).replace(/\\s+/g, ' ').trim();\n\nconst rating = extract(/a-icon-alt\\\">([0-9][0-9.,]*)\\s*out\\s*of\\s*5/i)\n  || extract(/a-star-([0-9]-[0-9])/i).replace('-', '.');\n\nlet image = extract(/<meta property=\\\"og:image\\\" content=\\\"([^\\\"]+)\\\"/i);\nif (!image) {\n  image = extract(/\\\"hiRes\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"/i) || extract(/\\\"large\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"/i);\n}\nimage = decode(image);\n\nconst brandRaw = extract(/po-brand[\\s\\S]*?po-break-word\\\">([\\s\\S]*?)<\\/span>/i);\nconst brand = decode(brandRaw).trim();\n\nconst outOfStock = /id=\\\"outOfStock\\\"|Currently unavailable|temporarily out of stock/i.test(html);\n\nconst itemLink = `https://www.amazon.${req.domain}/dp/${req.asin}`;\nconst affiliateLink = req.affiliateTag\n  ? `${itemLink}?tag=${encodeURIComponent(req.affiliateTag)}`\n  : itemLink;\n\nconst payload = {\n  marketplace: 'amazon',\n  asin: req.asin,\n  keyword: req.keyword,\n  domain: req.domain,\n  title: decode(title),\n  price,\n  oldPrice,\n  rating: rating || '',\n  image,\n  brand,\n  outOfStock,\n  hasCaptcha,\n  productUrl: itemLink,\n  affiliateUrl: affiliateLink,\n  scrapedAt: new Date().toISOString(),\n  source: 'n8n-amazon-enrichment'\n};\n\nreturn [{ json: payload }];"
+      },
+      "id": "5",
+      "name": "Parse Product Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -380,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.hasCaptcha}}",
+              "operation": "isTrue"
+            }
+          ]
+        }
+      },
+      "id": "6",
+      "name": "IF Captcha",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        -140,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.CAPTCHA_ALERT_WEBHOOK_URL || 'http://localhost:5678/webhook/captcha-alert'}}",
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={{$json}}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "7",
+      "name": "Notify Captcha",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        100,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.PANEL_UPSERT_URL || 'http://localhost:3000/api/opportunities/upsert'}}",
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={{$json}}",
+        "options": {
+          "timeout": 20000
+        }
+      },
+      "id": "8",
+      "name": "Upsert Panel",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        100,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"ok\": true,\n  \"asin\": $items('Parse Product Data', 0, 0)[0].json.asin,\n  \"hasCaptcha\": $items('Parse Product Data', 0, 0)[0].json.hasCaptcha,\n  \"title\": $items('Parse Product Data', 0, 0)[0].json.title,\n  \"affiliateUrl\": $items('Parse Product Data', 0, 0)[0].json.affiliateUrl\n}"
+      },
+      "id": "9",
+      "name": "Respond Enrichment",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        360,
+        140
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Enrichment": {
+      "main": [
+        [
+          {
+            "node": "Normalize Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Request": {
+      "main": [
+        [
+          {
+            "node": "Wait Random",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Random": {
+      "main": [
+        [
+          {
+            "node": "Fetch Product Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Product Page": {
+      "main": [
+        [
+          {
+            "node": "Parse Product Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Product Data": {
+      "main": [
+        [
+          {
+            "node": "IF Captcha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Captcha": {
+      "main": [
+        [
+          {
+            "node": "Notify Captcha",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond Enrichment",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Upsert Panel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Captcha": {
+      "main": [
+        [
+          {
+            "node": "Respond Enrichment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Panel": {
+      "main": [
+        [
+          {
+            "node": "Respond Enrichment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

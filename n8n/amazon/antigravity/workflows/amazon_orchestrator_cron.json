@@ -1,0 +1,231 @@
+{
+  "name": "AG | Amazon Orchestrator (Cron)",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      },
+      "id": "1",
+      "name": "Cron",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -980,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "domain",
+              "value": "com.br"
+            },
+            {
+              "name": "affiliateTag",
+              "value": "seu-tag-aqui-20"
+            },
+            {
+              "name": "keywordsCsv",
+              "value": "fritadeira,monitor gamer,notebook,ssd 1tb,cadeira escritorio"
+            }
+          ],
+          "number": [
+            {
+              "name": "page",
+              "value": 1
+            },
+            {
+              "name": "maxItems",
+              "value": 30
+            },
+            {
+              "name": "minDelayMs",
+              "value": 2500
+            },
+            {
+              "name": "maxDelayMs",
+              "value": 6000
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2",
+      "name": "Set Campaign",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -760,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = String($json.keywordsCsv || '');\nconst keywords = raw.split(',').map(s => s.trim()).filter(Boolean);\nif (!keywords.length) throw new Error('Nenhuma keyword configurada');\n\nreturn keywords.map((keyword) => ({\n  json: {\n    keyword,\n    domain: $json.domain,\n    affiliateTag: $json.affiliateTag,\n    page: Number($json.page || 1),\n    maxItems: Number($json.maxItems || 30),\n    minDelayMs: Number($json.minDelayMs || 2500),\n    maxDelayMs: Number($json.maxDelayMs || 6000)\n  }\n}));"
+      },
+      "id": "3",
+      "name": "Explode Keywords",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -540,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "4",
+      "name": "Split Keywords",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -320,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "amount": "={{Math.floor(Math.random() * (($json.maxDelayMs || 6000) - ($json.minDelayMs || 2500) + 1)) + ($json.minDelayMs || 2500)}}",
+        "unit": "milliseconds"
+      },
+      "id": "5",
+      "name": "Wait Random",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -100,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.DISCOVERY_WEBHOOK_URL || 'http://localhost:5678/webhook/amazon-discovery'}}",
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={{$json}}",
+        "options": {
+          "timeout": 25000
+        }
+      },
+      "id": "6",
+      "name": "Call Discovery",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        120,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const responses = $input.all().map(i => i.json);\nreturn [{\n  json: {\n    ok: true,\n    executedAt: new Date().toISOString(),\n    responsesCount: responses.length,\n    responses\n  }\n}];"
+      },
+      "id": "7",
+      "name": "Build Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        340,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Cron": {
+      "main": [
+        [
+          {
+            "node": "Set Campaign",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Campaign": {
+      "main": [
+        [
+          {
+            "node": "Explode Keywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Explode Keywords": {
+      "main": [
+        [
+          {
+            "node": "Split Keywords",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Build Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Keywords": {
+      "main": [
+        [
+          {
+            "node": "Wait Random",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Random": {
+      "main": [
+        [
+          {
+            "node": "Call Discovery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Discovery": {
+      "main": [
+        [
+          {
+            "node": "Split Keywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

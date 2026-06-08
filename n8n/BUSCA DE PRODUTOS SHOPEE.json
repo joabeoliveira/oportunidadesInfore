@@ -3,16 +3,49 @@
   "nodes": [
     {
       "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1zTeVIRoXDAw_KJbBWKvRgIkY98_VbEMmpl4PSOIRkAM",
+          "mode": "list",
+          "cachedResultName": "Planilha Shopee",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1zTeVIRoXDAw_KJbBWKvRgIkY98_VbEMmpl4PSOIRkAM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1848272380,
+          "mode": "list",
+          "cachedResultName": "Produtos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1zTeVIRoXDAw_KJbBWKvRgIkY98_VbEMmpl4PSOIRkAM/edit#gid=1848272380"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        576,
+        1008
+      ],
+      "id": "fdef2dbb-0aee-425c-8faf-72d874b44964",
+      "name": "CARREGA PRODUTOS DA PLANILHA",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "wHIpEHjK5qArJxcM",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
         "options": {}
       },
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        0,
-        720
+        224,
+        1232
       ],
-      "id": "17e9d4fa-a7a1-4ecd-a989-e05038f473c7",
-      "name": "PROCESSA 1 POR VEZ"
+      "id": "d4decaaf-475e-43c2-b79b-4290b086cb62",
+      "name": "PROCESSA 1 POR VEZ1"
     },
     {
       "parameters": {
@@ -21,11 +54,11 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        352,
-        832
+        576,
+        1344
       ],
-      "id": "24c2ba04-1056-4151-b344-5459dbd081b0",
-      "name": "DELAY 3 SEGUNDOS",
+      "id": "88ea23b9-afe6-4718-a91a-cf6148f0a133",
+      "name": "DELAY 3 SEGUNDOS1",
       "webhookId": "wait-shopee-delay"
     },
     {
@@ -42,11 +75,11 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
-        -448,
-        720
+        -752,
+        1056
       ],
-      "id": "7bd672d4-4c1d-4597-afec-bd2e7dcbda33",
-      "name": "Schedule Trigger (6x/dia)1"
+      "id": "c8bb9f13-9159-404b-8ce2-ff88d4982d14",
+      "name": "Schedule Trigger (6x/dia)"
     },
     {
       "parameters": {
@@ -77,11 +110,11 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        -224,
-        720
+        -80,
+        1232
       ],
-      "id": "950404c6-2da0-489f-a4c4-c2bea13acf6e",
-      "name": "CARREGA CATEGORIAS2",
+      "id": "65c0fe0c-7773-47ce-aff0-f5e401359b57",
+      "name": "CARREGA CATEGORIAS",
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "wHIpEHjK5qArJxcM",
@@ -135,11 +168,11 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        576,
-        832
+        800,
+        1344
       ],
-      "id": "abb8841f-e4eb-4f96-a7f0-14c784726557",
-      "name": "⚙️ CONFIGURAÇÕES2"
+      "id": "c13700b4-fa43-46c1-ad6d-e97dc1a6c2d4",
+      "name": "⚙️ CONFIGURAÇÕES"
     },
     {
       "parameters": {
@@ -149,11 +182,11 @@
       "type": "n8n-nodes-base.crypto",
       "typeVersion": 1,
       "position": [
-        800,
-        832
+        1024,
+        1344
       ],
-      "id": "83f39edd-2e1e-4d6e-a863-775422fb79e5",
-      "name": "GERA KEY 257"
+      "id": "0e4b5e2d-3f6b-4b92-a5ac-928e168bfbf3",
+      "name": "GERA KEY "
     },
     {
       "parameters": {
@@ -186,11 +219,11 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        1024,
-        832
+        1248,
+        1344
       ],
-      "id": "772bfea5-e735-47aa-b3fc-d7bcc8a34699",
-      "name": "PESQUISA PRODUTOS NA SHOPEE2",
+      "id": "cdfae91a-ff36-4446-9820-7dc352478d36",
+      "name": "PESQUISA PRODUTOS NA SHOPEE",
       "retryOnFail": true,
       "maxTries": 3
     },
@@ -207,24 +240,25 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
-        -432,
-        1136
+        -736,
+        1360
       ],
-      "id": "e7e39fe9-8c09-455b-98b8-8f652a7ab7a5",
-      "name": "LIMPEZA DIÁRIA (23h)1"
+      "id": "31fe67d0-7c7b-49e8-8eba-a49a302593fa",
+      "name": "LIMPEZA DIÁRIA (23h)",
+      "disabled": true
     },
     {
       "parameters": {
-        "jsCode": "// Tratamento de erro e log\n// CORRIGIDO: usa contexto do splitInBatches para pegar categoria correta do batch atual\nconst error = $input.first().json.error;\nconst categoria = $('PROCESSA 1 POR VEZ').item.json.Categoria;\n\nreturn [{\n  json: {\n    success: false,\n    category: categoria,\n    error: error?.message || 'Unknown error',\n    timestamp: new Date().toISOString(),\n    platform: 'Shopee'\n  }\n}];"
+        "jsCode": "// Tratamento de erro e log\n// CORRIGIDO: usa contexto do splitInBatches para pegar categoria correta do batch atual\nconst error = $input.first().json.error;\nconst categoria = $('PROCESSA 1 POR VEZ1').item.json.Categoria;\n\nreturn [{\n  json: {\n    success: false,\n    category: categoria,\n    error: error?.message || 'Unknown error',\n    timestamp: new Date().toISOString(),\n    platform: 'Shopee'\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2160,
-        1136
+        2112,
+        1856
       ],
-      "id": "c593a483-d2a8-498b-9ff9-f8dd024d4647",
-      "name": "TRATA ERROS1"
+      "id": "dbfb0606-3290-4cc1-9a34-916112420a20",
+      "name": "TRATA ERROS"
     },
     {
       "parameters": {
@@ -247,25 +281,25 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        2384,
-        1136
+        2336,
+        1856
       ],
-      "id": "2ce821ed-a13f-45e6-b4e5-e76727cd6a41",
-      "name": "LOGA ERRO NA API1",
+      "id": "29bafe6d-287d-426d-a96b-556c5766f81c",
+      "name": "LOGA ERRO NA API",
       "retryOnFail": false
     },
     {
       "parameters": {
-        "jsCode": "const p = $input.first().json;\nconst nodes = p.data?.productOfferV2?.nodes || [];\nconst minPrice = $('⚙️ CONFIGURAÇÕES2').item.json.valorMinimo;\nconst minComm = $('⚙️ CONFIGURAÇÕES2').item.json.comissaoMinima;\nconst minSales = $('⚙️ CONFIGURAÇÕES2').item.json.minimoVendas;\nconst categoriaAtual = $('PROCESSA 1 POR VEZ').item.json.Categoria;\n\nconst mapped = nodes\n  .filter(n => {\n    const price = typeof n.price === 'number' ? n.price : parseFloat(n.price);\n    const comm = n.commissionRate || 0;\n    const sales = n.sales || 0;\n    return price > minPrice && comm >= minComm && sales >= minSales;\n  })\n  .map(n => {\n    const price = typeof n.price === 'number' ? n.price : parseFloat(n.price);\n    const comm = n.commissionRate || 0;\n    const precoDesconto = parseFloat((price * (1 - comm)).toFixed(2));\n    return {\n      titulo: n.productName || \"\",\n      preco_original: price,\n      preco_desconto: precoDesconto,\n      url_afiliado: n.offerLink || n.productLink || \"\",\n      imagem_url: n.imageUrl || \"\",\n      plataforma: \"Shopee\",\n      _productId: String(n.itemId),\n      _commissionRate: comm,\n      _sales: n.sales || 0,\n      _searchedCategory: categoriaAtual,\n      _timestamp: new Date().toISOString()\n    };\n  });\n\nreturn [{\n  json: {\n    produtos: mapped,\n    total: mapped.length,\n    hasProducts: mapped.length > 0\n  }\n}];"
+        "jsCode": "const p = $input.first().json;\nconst nodes = p.data?.productOfferV2?.nodes || [];\nconst minPrice = $('⚙️ CONFIGURAÇÕES').item.json.valorMinimo;\nconst minComm = $('⚙️ CONFIGURAÇÕES').item.json.comissaoMinima;\nconst minSales = $('⚙️ CONFIGURAÇÕES').item.json.minimoVendas;\nconst categoriaAtual = $('PROCESSA 1 POR VEZ1').item.json.Categoria;\n\nconst mapped = nodes\n  .filter(n => {\n    const price = typeof n.price === 'number' ? n.price : parseFloat(n.price);\n    const comm = n.commissionRate || 0;\n    const sales = n.sales || 0;\n    return price > minPrice && comm >= minComm && sales >= minSales;\n  })\n  .map(n => {\n    const price = typeof n.price === 'number' ? n.price : parseFloat(n.price);\n    const comm = n.commissionRate || 0;\n    const precoDesconto = parseFloat((price * (1 - comm)).toFixed(2));\n    return {\n      titulo: n.productName || \"\",\n      preco_original: price,\n      preco_desconto: precoDesconto,\n      url_afiliado: n.offerLink || n.productLink || \"\",\n      imagem_url: n.imageUrl || \"\",\n      plataforma: \"Shopee\",\n      _productId: String(n.itemId),\n      _commissionRate: comm,\n      _sales: n.sales || 0,\n      _searchedCategory: categoriaAtual,\n      _timestamp: new Date().toISOString()\n    };\n  });\n\nreturn [{\n  json: {\n    produtos: mapped,\n    total: mapped.length,\n    hasProducts: mapped.length > 0\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1248,
-        832
+        1472,
+        1344
       ],
-      "id": "cd4a64d4-d190-4623-9223-002a6e7a351b",
-      "name": "FILTRA E MAPEIA EM ARRAY"
+      "id": "33da13ef-723e-4da8-80b2-3ba61ccd3b8b",
+      "name": "FILTRA E MAPEIA EM ARRAY1"
     },
     {
       "parameters": {
@@ -273,7 +307,7 @@
           "options": {
             "caseSensitive": true,
             "leftValue": "",
-            "typeValidation": "loose",
+            "typeValidation": "strict",
             "version": 3
           },
           "conditions": [
@@ -289,16 +323,17 @@
             }
           ],
           "combinator": "and"
-        }
+        },
+        "options": {}
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1472,
-        832
+        1696,
+        1344
       ],
-      "id": "286ae7bc-dfa3-4fd7-91ef-2075156406fd",
-      "name": "POSSUI PRODUTOS?"
+      "id": "71104fbf-a54b-4df5-ac61-672f9f9b7552",
+      "name": "POSSUI PRODUTOS?1"
     },
     {
       "parameters": {
@@ -308,28 +343,28 @@
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
       "position": [
-        1696,
-        832
+        2096,
+        1488
       ],
-      "id": "3db6aace-9dad-494b-9bd3-137dbe17e7f1",
-      "name": "SEPARA PRODUTOS2"
+      "id": "fe470312-d7a7-4cc9-82e8-1823a7ca2eb8",
+      "name": "SEPARA PRODUTOS"
     },
     {
       "parameters": {
         "operation": "clear",
         "documentId": {
           "__rl": true,
-          "value": "13T9KjHUfQoXYVY157ZCKNcx0Ds0WG0teK32U1Z_Ig88",
+          "value": "1zTeVIRoXDAw_KJbBWKvRgIkY98_VbEMmpl4PSOIRkAM",
           "mode": "list",
-          "cachedResultName": "Video Shopee",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13T9KjHUfQoXYVY157ZCKNcx0Ds0WG0teK32U1Z_Ig88/edit?usp=drivesdk"
+          "cachedResultName": "Planilha Shopee",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1zTeVIRoXDAw_KJbBWKvRgIkY98_VbEMmpl4PSOIRkAM/edit?usp=drivesdk"
         },
         "sheetName": {
           "__rl": true,
           "value": 1848272380,
           "mode": "list",
           "cachedResultName": "Produtos",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13T9KjHUfQoXYVY157ZCKNcx0Ds0WG0teK32U1Z_Ig88/edit#gid=1848272380"
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1zTeVIRoXDAw_KJbBWKvRgIkY98_VbEMmpl4PSOIRkAM/edit#gid=1848272380"
         },
         "keepFirstRow": true
       },
@@ -337,10 +372,10 @@
       "typeVersion": 4.7,
       "position": [
         -336,
-        520
+        1232
       ],
-      "id": "4ba6c34f-cdf1-4e45-a0fb-1e4005cac7d8",
-      "name": "LIMPA TABELA (Diário)1",
+      "id": "39261a12-a504-4324-b5e2-0d790dd82d2a",
+      "name": "LIMPA TABELA (Diário)",
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "wHIpEHjK5qArJxcM",
@@ -353,10 +388,10 @@
         "operation": "appendOrUpdate",
         "documentId": {
           "__rl": true,
-          "value": "13T9KjHUfQoXYVY157ZCKNcx0Ds0WG0teK32U1Z_Ig88",
+          "value": "1zTeVIRoXDAw_KJbBWKvRgIkY98_VbEMmpl4PSOIRkAM",
           "mode": "list",
-          "cachedResultName": "Video Shopee",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13T9KjHUfQoXYVY157ZCKNcx0Ds0WG0teK32U1Z_Ig88/edit?usp=drivesdk"
+          "cachedResultName": "Planilha Shopee",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1zTeVIRoXDAw_KJbBWKvRgIkY98_VbEMmpl4PSOIRkAM/edit?usp=drivesdk"
         },
         "sheetName": {
           "__rl": true,
@@ -373,10 +408,10 @@
             "Preço": "={{ $json.preco_original }}",
             "Comissão": "={{ $json._commissionRate }}",
             "Vendas": "={{ $json._sales }}",
-            "Link": "={{ $json.url_afiliado }}",
             "Imagem": "={{ $json.imagem_url }}",
-            "Status": "Enviado",
-            "Miniatura": "==IMAGE(\"{{ $json.imagem_url }}\";4;400;400)"
+            "Miniatura": "==IMAGE(\"{{ $json.imagem_url }}\";4;400;400)",
+            "Link": "={{ $json.url_afiliado }}",
+            "Status": "Enviado"
           },
           "matchingColumns": [
             "Id"
@@ -389,7 +424,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "Nome",
@@ -398,7 +434,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "Preço",
@@ -407,7 +444,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "Comissão",
@@ -416,7 +454,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "Vendas",
@@ -425,7 +464,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "Imagem",
@@ -434,15 +474,18 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "Miniatura",
               "displayName": "Miniatura",
-              "removed": false,
               "required": false,
+              "defaultMatch": false,
+              "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "Link",
@@ -451,7 +494,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "Status",
@@ -460,7 +504,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             }
           ],
           "attemptToConvertTypes": false,
@@ -471,11 +516,11 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        1920,
-        832
+        2320,
+        1488
       ],
-      "id": "9770c66a-ff15-4924-a1fe-b39748f82c58",
-      "name": "LOGA NA PLANILHA1",
+      "id": "d3b55590-00cc-49b7-bce3-99f119d4ac45",
+      "name": "LOGA NA PLANILHA2",
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "wHIpEHjK5qArJxcM",
@@ -485,50 +530,16 @@
     },
     {
       "parameters": {
-        "operation": "read",
-        "documentId": {
-          "__rl": true,
-          "value": "13T9KjHUfQoXYVY157ZCKNcx0Ds0WG0teK32U1Z_Ig88",
-          "mode": "list",
-          "cachedResultName": "Video Shopee",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13T9KjHUfQoXYVY157ZCKNcx0Ds0WG0teK32U1Z_Ig88/edit?usp=drivesdk"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": 1848272380,
-          "mode": "list",
-          "cachedResultName": "Produtos",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13T9KjHUfQoXYVY157ZCKNcx0Ds0WG0teK32U1Z_Ig88/edit#gid=1848272380"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
-      "position": [
-        200,
-        1000
-      ],
-      "id": "e56eba46-d79e-43da-9748-616f9fdaf76c",
-      "name": "CARREGA PRODUTOS DA PLANILHA",
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "wHIpEHjK5qArJxcM",
-          "name": "Google Sheets account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "const ofertas = $input.all().map(item => {\n  const d = item.json;\n  const precoOriginal = parseFloat(d.Preço) || 0;\n  const comissao = parseFloat(d.Comissão) || 0;\n  const precoDesconto = parseFloat((precoOriginal * (1 - comissao)).toFixed(2));\n  return {\n    titulo: String(d.Nome || '').trim(),\n    preco_original: precoOriginal,\n    preco_desconto: precoDesconto,\n    url_afiliado: String(d.Link || '').trim(),\n    imagem_url: String(d.Imagem || '').trim(),\n    plataforma: 'Shopee'\n  };\n});\n\nreturn [{\n  json: {\n    body: ofertas\n  }\n}];"
+        "jsCode": "const ofertas = $input.all().map(item => {\n  const d = item.json;\n  const getField = (keys) => {\n    for (const key of keys) {\n      if (d[key] !== undefined && d[key] !== null) return d[key];\n      if (d[key.toLowerCase()] !== undefined && d[key.toLowerCase()] !== null) return d[key.toLowerCase()];\n    }\n    const lowerKeys = keys.map(k => k.toLowerCase());\n    for (const k in d) {\n      const normalizedK = k.toLowerCase().normalize(\"NFD\").replace(/[\\u0300-\\u036f]/g, \"\");\n      for (const target of lowerKeys) {\n        const normalizedTarget = target.normalize(\"NFD\").replace(/[\\u0300-\\u036f]/g, \"\");\n        if (normalizedK === normalizedTarget) {\n          return d[k];\n        }\n      }\n    }\n    return undefined;\n  };\n  const precoOriginal = parseFloat(getField(['Preço', 'Preco', 'Price', 'preco_original'])) || 0;\n  const comissao = parseFloat(getField(['Comissão', 'Comissao', 'Commission', '_commissionRate'])) || 0;\n  const precoDesconto = parseFloat((precoOriginal * (1 - comissao)).toFixed(2));\n  return {\n    titulo: String(getField(['Nome', 'Name', 'titulo', 'productName']) || '').trim(),\n    preco_original: precoOriginal,\n    preco_desconto: precoDesconto,\n    url_afiliado: String(getField(['Link', 'url_afiliado', 'offerLink', 'productLink']) || '').trim(),\n    imagem_url: String(getField(['Imagem', 'imagem_url', 'imageUrl']) || '').trim(),\n    plataforma: 'Shopee'\n  };\n});\nreturn [{\n  json: {\n    body: ofertas\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        424,
-        1000
+        832,
+        1008
       ],
-      "id": "a52732d7-fa01-46e6-a32d-ae08a34ef5c3",
-      "name": "AGRUPA EM ARRAY"
+      "id": "27f80687-8572-48c4-af65-d1d63cb6af0e",
+      "name": "AGRUPA EM ARRAY1"
     },
     {
       "parameters": {
@@ -557,162 +568,29 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        648,
-        1000
+        1104,
+        1008
       ],
-      "id": "6b465ca8-514e-4f3f-86a1-d3fec0e92742",
-      "name": "ENVIA PARA API",
+      "id": "70ab36c9-3781-444b-ab7c-91bb09501ff1",
+      "name": "ENVIA PARA API1",
       "retryOnFail": true,
       "maxTries": 2
     }
   ],
   "pinData": {},
   "connections": {
-    "DELAY 3 SEGUNDOS": {
+    "CARREGA PRODUTOS DA PLANILHA": {
       "main": [
         [
           {
-            "node": "⚙️ CONFIGURAÇÕES2",
+            "node": "AGRUPA EM ARRAY1",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "⚙️ CONFIGURAÇÕES2": {
-      "main": [
-        [
-          {
-            "node": "GERA KEY 257",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "GERA KEY 257": {
-      "main": [
-        [
-          {
-            "node": "PESQUISA PRODUTOS NA SHOPEE2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "LIMPEZA DIÁRIA (23h)1": {
-      "main": [
-        [
-          {
-            "node": "LIMPA TABELA (Diário)1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "TRATA ERROS1": {
-      "main": [
-        [
-          {
-            "node": "LOGA ERRO NA API1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "LOGA ERRO NA API1": {
-      "main": [
-        []
-      ]
-    },
-    "PESQUISA PRODUTOS NA SHOPEE2": {
-      "main": [
-        [
-          {
-            "node": "FILTRA E MAPEIA EM ARRAY",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "FILTRA E MAPEIA EM ARRAY": {
-      "main": [
-        [
-          {
-            "node": "POSSUI PRODUTOS?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "POSSUI PRODUTOS?": {
-      "main": [
-        [
-          {
-            "node": "SEPARA PRODUTOS2",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "PROCESSA 1 POR VEZ",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "SEPARA PRODUTOS2": {
-      "main": [
-        [
-          {
-            "node": "LOGA NA PLANILHA1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Schedule Trigger (6x/dia)1": {
-      "main": [
-        [
-          {
-            "node": "LIMPA TABELA (Diário)1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "LIMPA TABELA (Diário)1": {
-      "main": [
-        [
-          {
-            "node": "CARREGA CATEGORIAS2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "CARREGA CATEGORIAS2": {
-      "main": [
-        [
-          {
-            "node": "PROCESSA 1 POR VEZ",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "PROCESSA 1 POR VEZ": {
+    "PROCESSA 1 POR VEZ1": {
       "main": [
         [
           {
@@ -723,40 +601,168 @@
         ],
         [
           {
-            "node": "DELAY 3 SEGUNDOS",
+            "node": "DELAY 3 SEGUNDOS1",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "LOGA NA PLANILHA1": {
+    "DELAY 3 SEGUNDOS1": {
       "main": [
         [
           {
-            "node": "PROCESSA 1 POR VEZ",
+            "node": "⚙️ CONFIGURAÇÕES",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "CARREGA PRODUTOS DA PLANILHA": {
+    "Schedule Trigger (6x/dia)": {
       "main": [
         [
           {
-            "node": "AGRUPA EM ARRAY",
+            "node": "LIMPA TABELA (Diário)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "AGRUPA EM ARRAY": {
+    "CARREGA CATEGORIAS": {
       "main": [
         [
           {
-            "node": "ENVIA PARA API",
+            "node": "PROCESSA 1 POR VEZ1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚙️ CONFIGURAÇÕES": {
+      "main": [
+        [
+          {
+            "node": "GERA KEY ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GERA KEY ": {
+      "main": [
+        [
+          {
+            "node": "PESQUISA PRODUTOS NA SHOPEE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PESQUISA PRODUTOS NA SHOPEE": {
+      "main": [
+        [
+          {
+            "node": "FILTRA E MAPEIA EM ARRAY1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LIMPEZA DIÁRIA (23h)": {
+      "main": [
+        [
+          {
+            "node": "LIMPA TABELA (Diário)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TRATA ERROS": {
+      "main": [
+        [
+          {
+            "node": "LOGA ERRO NA API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FILTRA E MAPEIA EM ARRAY1": {
+      "main": [
+        [
+          {
+            "node": "POSSUI PRODUTOS?1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POSSUI PRODUTOS?1": {
+      "main": [
+        [
+          {
+            "node": "SEPARA PRODUTOS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PROCESSA 1 POR VEZ1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SEPARA PRODUTOS": {
+      "main": [
+        [
+          {
+            "node": "LOGA NA PLANILHA2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LIMPA TABELA (Diário)": {
+      "main": [
+        [
+          {
+            "node": "CARREGA CATEGORIAS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LOGA NA PLANILHA2": {
+      "main": [
+        [
+          {
+            "node": "PROCESSA 1 POR VEZ1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AGRUPA EM ARRAY1": {
+      "main": [
+        [
+          {
+            "node": "ENVIA PARA API1",
             "type": "main",
             "index": 0
           }
@@ -768,11 +774,10 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "52398ecf-9d51-4eb1-9ae0-d2472ed8a4ab",
+  "versionId": "069dab55-e38d-41f5-a99c-e1f5ea490a46",
   "meta": {
-    "templateCredsSetupCompleted": true,
     "instanceId": "0435f3002e081a7fea4f6b9d9fb69e6d66a9ce283c409f889ee2eb8cc504ae5a"
   },
-  "id": "dRzmHt91NRyvGBmk",
+  "id": "C0ZlPp5H2sUuIkzN",
   "tags": []
 }
