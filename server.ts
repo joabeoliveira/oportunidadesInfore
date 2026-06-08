@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'path';
 import dotenv from 'dotenv';
+import crypto from 'crypto';
 import { createServer as createViteServer } from 'vite';
 import { getSupabaseClient } from './src/lib/supabase.ts';
 import { Oferta } from './src/types.ts';
@@ -75,8 +76,39 @@ function isSupabaseConfigured(): boolean {
   return !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
 }
 
+// Session authentication variables
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+const EXPECTED_SESSION_TOKEN = crypto.createHash('sha256').update(ADMIN_PASSWORD).digest('hex');
+
+// Middleware to enforce dashboard authentication
+function requireAuth(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Acesso não autorizado. Sessão inválida.' });
+  }
+  const token = authHeader.split(' ')[1];
+  if (token !== EXPECTED_SESSION_TOKEN) {
+    return res.status(401).json({ error: 'Sessão expirada ou inválida.' });
+  }
+  next();
+}
+
+// 0. Endpoint to login and get session token
+app.post('/api/auth/login', (req, res) => {
+  const { password } = req.body;
+  if (!password) {
+    return res.status(400).json({ error: 'Senha não fornecida.' });
+  }
+  const passwordHash = crypto.createHash('sha256').update(password).digest('hex');
+  if (passwordHash === EXPECTED_SESSION_TOKEN) {
+    return res.json({ success: true, token: EXPECTED_SESSION_TOKEN });
+  } else {
+    return res.status(401).json({ error: 'Senha incorreta.' });
+  }
+});
+
 // 1. Endpoint to check configuration status
-app.get('/api/status', (req, res) => {
+app.get('/api/status', requireAuth, (req, res) => {
   res.json({
     configured: isSupabaseConfigured(),
     url: process.env.NEXT_PUBLIC_SUPABASE_URL || null,
@@ -84,7 +116,7 @@ app.get('/api/status', (req, res) => {
 });
 
 // 2. Endpoint to fetch all offers
-app.get('/api/ofertas', async (req, res) => {
+app.get('/api/ofertas', requireAuth, async (req, res) => {
   if (!isSupabaseConfigured()) {
     console.log('Supabase configuration missing in .env. Returning in-memory demo data.');
     return res.json({

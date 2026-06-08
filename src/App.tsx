@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Oferta } from './types.ts';
 import RadarGrid from './components/RadarGrid.tsx';
 import { Radio, RefreshCw, Send, HelpCircle, Copy, Check, Sparkles } from 'lucide-react';
+import logoInfore from '../assets/logo.svg';
 
 export default function App() {
   const [ofertas, setOfertas] = useState<Oferta[]>([]);
@@ -13,21 +14,71 @@ export default function App() {
   const [sendingTest, setSendingTest] = useState(false);
   const [testSuccess, setTestSuccess] = useState(false);
 
+  // Authentication states
+  const [token, setToken] = useState<string | null>(localStorage.getItem('infore_session'));
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!token);
+  const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError('');
+    setIsLoggingIn(true);
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        localStorage.setItem('infore_session', data.token);
+        setToken(data.token);
+        setIsAuthenticated(true);
+      } else {
+        const data = await res.json();
+        setLoginError(data.error || 'Senha incorreta.');
+      }
+    } catch (err) {
+      setLoginError('Falha ao se conectar com o servidor.');
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('infore_session');
+    setToken(null);
+    setIsAuthenticated(false);
+    setPassword('');
+  };
+
   // Load resources from Express backend
   const fetchData = async (showRefreshIndicator = false) => {
     if (showRefreshIndicator) setRefreshing(true);
     else setLoading(true);
 
     try {
+      const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+
       // Fetch status
-      const statusRes = await fetch('/api/status');
+      const statusRes = await fetch('/api/status', { headers });
+      if (statusRes.status === 401) {
+        handleLogout();
+        return;
+      }
       if (statusRes.ok) {
         const statusData = await statusRes.json();
         setIsConfigured(statusData.configured);
       }
 
       // Fetch offers
-      const ofertasRes = await fetch('/api/ofertas');
+      const ofertasRes = await fetch('/api/ofertas', { headers });
+      if (ofertasRes.status === 401) {
+        handleLogout();
+        return;
+      }
       if (ofertasRes.ok) {
         const ofertasData = await ofertasRes.json();
         setOfertas(ofertasData.ofertas || []);
@@ -41,12 +92,14 @@ export default function App() {
   };
 
   useEffect(() => {
-    fetchData();
-    const interval = setInterval(() => {
-      fetchData(false); // Fetch quietly in background
-    }, 600000); // every 10 minutes
-    return () => clearInterval(interval);
-  }, []);
+    if (isAuthenticated && token) {
+      fetchData();
+      const interval = setInterval(() => {
+        fetchData(false); // Fetch quietly in background
+      }, 600000); // every 10 minutes
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated, token]);
 
   // Send interactive local mock n8n webhook payload to test
   const sendTestWebhook = async () => {
@@ -74,7 +127,10 @@ export default function App() {
 
       const res = await fetch('/api/webhooks/ofertas', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer INFORE_MVP_TOKEN_2026'
+        },
         body: JSON.stringify(testPayload)
       });
 
@@ -110,21 +166,83 @@ export default function App() {
     setTimeout(() => setCopiedCurl(false), 2000);
   };
 
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-radial from-slate-900 to-gray-950 flex items-center justify-center p-4 font-sans relative overflow-hidden">
+        {/* Background glow effects */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 w-full max-w-md shadow-2xl space-y-6 relative z-10 text-white">
+          <div className="flex flex-col items-center space-y-4 text-center">
+            {/* Logo Infore */}
+            <img src={logoInfore} alt="Infore Logo" className="h-10 w-auto object-contain" />
+            <div className="space-y-1">
+              <h2 className="text-xl font-extrabold tracking-tight">Acesso Restrito</h2>
+              <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">
+                Radar de Oportunidades • Painel Administrativo
+              </p>
+            </div>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                Senha de Acesso
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Insira a senha do painel"
+                className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
+                required
+                disabled={isLoggingIn}
+              />
+            </div>
+
+            {loginError && (
+              <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-semibold p-3 rounded-xl text-center">
+                {loginError}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isLoggingIn}
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 transition rounded-xl text-sm font-bold shadow-lg shadow-blue-600/20 active:scale-[0.98] duration-150 flex items-center justify-center gap-2 cursor-pointer text-white"
+            >
+              {isLoggingIn ? 'Verificando...' : 'Entrar no Painel'}
+            </button>
+          </form>
+
+          <div className="text-center text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+            © {new Date().getFullYear()} INFORE TECNOLOGIA
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#F9FAFB] text-gray-900 font-sans">
       {/* Top Banner and Brand Navbar */}
       <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-xs backdrop-blur-md px-6 sm:px-8 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:h-20">
         {/* Logo Group */}
-        <div className="flex items-center gap-3">
-          <span className="bg-blue-600 text-white p-2 rounded-xl flex items-center justify-center shadow-xs">
-            <Radio className="w-6 h-6 animate-pulse" />
-          </span>
-          <div>
+        <div className="flex items-center gap-4">
+          <img
+            src={logoInfore}
+            alt="Infore Logo"
+            className="h-8 w-auto object-contain hover:scale-105 transition-transform duration-300 cursor-pointer"
+            style={{ filter: 'brightness(0)' }}
+          />
+          <div className="border-l border-gray-200 pl-4 py-1">
             <h1 className="text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight flex items-center gap-2">
               Radar de Oportunidades
+              <Radio className="w-5 h-5 text-blue-600 animate-pulse" />
             </h1>
-            <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mt-0.5">
-              Monitoramento Infore • Atualizado diariamente
+            <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mt-0.5">
+              Monitoramento Interno • Atualizado diariamente
             </p>
           </div>
         </div>
@@ -162,6 +280,14 @@ export default function App() {
           >
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-blue-600' : ''}`} />
             <span>Atualizar</span>
+          </button>
+
+          <button
+            onClick={handleLogout}
+            className="p-2 px-4 rounded-xl border border-rose-200 text-rose-600 bg-rose-50/50 hover:bg-rose-50 hover:border-rose-300 transition cursor-pointer flex items-center gap-1.5 text-xs font-bold"
+            title="Sair do Painel"
+          >
+            <span>Sair</span>
           </button>
 
           <div className="hidden lg:flex items-center gap-1 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-xl ml-1 text-right">

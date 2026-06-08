@@ -1,0 +1,344 @@
+{
+    "name": "Skills no n8n",
+    "nodes": [
+        {
+            "parameters": {
+                "promptType": "define",
+                "text": "={{ $('When chat message received').item.json.chatInput }}",
+                "options": {
+                    "systemMessage": "=<agent>\n  <name>Roteirista profissional para o Youtube</name>\n  <role>Roteirista profissional do Youtube</role>\n  <goal>Criar roteiros de alta qualidade e com alta capacidade de viralizar para o Youtube</goal>\n\n  <constraints>\n    <rule>Utilize conhecimento geral apenas para contexto da história central e do fato relacionado no tema do vídeo. Fora esta situação, NÃO usar conhecimento geral fora dos arquivos de skills quando disponíveis</rule>\n    <rule>SEGUIR rigorosamente as instruções das skills carregadas</rule>\n    <rule>NÃO incluir diálogos no roteiro</rule>\n    <rule>Manter precisão histórica e narrativa envolvente</rule>\n    <rule>Evitar humor caricatural ou infantilização</rule>\n  </constraints>\n\n  <tools>\n    <get_file_from_github>\n      <description>\n        Lê o conteúdo de texto de um arquivo no GitHub a partir da organização, do nome do repositório e do caminho para o arquivo.\n      </description>\n      <tips>\n        Atente-se para extrair os dados dos parametros da url direta do arquivo da skill, ou seja, na url poderá vir também o branch de origem do arquivo e isso pode gerar um problema ao pegar os dados do arquivo no Github\n      </tips>\n      <params>\n        <repoOwnerUsername>string</repoOwnerUsername>\n        <repoName>boolean</repoName>\n        <File_Path>string</File_Path>\n      </params>\n    </get_file_from_github>\n  </tools>\n\n  <inputs>\n    <theme>O usuário irá informar o tema do vídeo</theme>\n    <duration>O usuário irá informar a duração do vídeo</duration>\n    <audience>O usuário irá informar o público-alvo do vídeo e/ou canal</audience>\n    <available_skills>{{ $json.skills.toJsonString() }}</available_skills>\n  </inputs>\n\n  <workflow>\n    <step id=\"1\">\n      <action>Identificar skills relevantes</action>\n      <method>Avalie dentro das skills disponíveis (available_skills) quais skills são necessárias para a execução da tarefa solicitada.</method>\n    </step>\n\n    <step id=\"2\">\n      <action>Carregar instruções das skills</action>\n      <method>Extrair dados da skill utilizando a ferramenta get_file_from_github, preencha os parâmetros da ferramenta utilizando a url do github como base.</method>\n    </step>\n\n    <step id=\"3\">\n      <action>Gerar roteiro conforme solicitado</action>\n      <requirements>\n        <item>Título claro e envolvente</item>\n        <item>Narração contínua (sem diálogos)</item>\n        <item>Tom informativo, reflexivo e levemente cinematográfico</item>\n      </requirements>\n    </step>\n\n    <step id=\"4\">\n      <action>Gerar o prompt para a geração de imagens (thumbnail) para o vídeo solicitado</action>\n      <output>\n        <prompt_thumbnail>{prompt_thumbnail}</prompt_thumbnail>\n      </output>\n    </step>\n  </workflow>\n</agent>",
+                    "maxIterations": 150
+                }
+            },
+            "id": "b6a4a6d9-9596-4482-89c2-753d8de1e527",
+            "name": "AI Agent",
+            "type": "@n8n/n8n-nodes-langchain.agent",
+            "position": [
+                848,
+                96
+            ],
+            "executeOnce": true,
+            "typeVersion": 3.1
+        },
+        {
+            "parameters": {
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "8955dd58-72aa-49a9-a6aa-7c1679ee5b51",
+                            "name": "skills",
+                            "type": "array",
+                            "value": "=[\n  {\n    \"name\": \"youtube-scriptwriting\",\n    \"description\": \"Transform raw ideas and brain dumps into polished YouTube scripts through a structured checkpoint workflow. Use when the user wants to write a YouTube script, improve video retention, craft hooks, structure educational or entertainment content, or turn source material (transcripts, notes, research) into a compelling video script. Guides through research, hook writing, story structure, body content, and editing phases.\",\n    \"repoOwnerUsername\": \"cdeistopened\",\n    \"repoName\": \"skill-stack\",\n    \"file_path\": \".claude/skills/youtube-scriptwriting/SKILL.md\"\n  },\n  {\n    \"name\": \"youtube-scriptwriting/references/research\",\n    \"description\": \"Research & Idea Development reference for YouTube scripts. Covers audience research (pains, beliefs, goals), the Shock Score Method for rating facts 1–100 based on how surprising they'll be to viewers, where to find high-shock material, and keyword research for SEO using tools like VidIQ and TubeBuddy. Produces a structured research document before scripting begins. Use when starting from scratch with no topic or when mining source material for compelling content.\",\n    \"repoOwnerUsername\": \"cdeistopened\",\n    \"repoName\": \"skill-stack\",\n    \"file_path\": \".claude/skills/youtube-scriptwriting/references/research.md\"\n  },\n  {\n    \"name\": \"youtube-scriptwriting/references/hooks\",\n    \"description\": \"Hook Formats reference with 9 proven YouTube hook formats: Secret Reveal, Case Study, Comparison, Question, Education, List, Contrarian, Personal Experience, and Problem. Includes PAS (Problem-Agitate-Solution) and AIDA (Attention-Interest-Desire-Delay) frameworks, the universal Target + Transformation + Stakes formula, and the 4 Hook Commandments (Alignment, Speed to Value, Clarity, Curiosity). Use when stuck on how to open a video and confirm the click.\",\n    \"repoOwnerUsername\": \"cdeistopened\",\n    \"repoName\": \"skill-stack\",\n    \"file_path\": \".claude/skills/youtube-scriptwriting/references/hooks.md\"\n  },\n  {\n    \"name\": \"youtube-scriptwriting/references/structures\",\n    \"description\": \"Story Structures reference with 7 proven video formats: Breakdown, Newscaster, Case Study Explainer, Listicle, Problem-Solver, Tutorial, and Educational/Personal Story — each with outline templates and recommended hook pairings. Also includes the But-Therefore storytelling method for creating conflict and consequence, and the 3A Story Framework (Beginning, Challenge, Consequence). Use when you don't know how to organize your script's points.\",\n    \"repoOwnerUsername\": \"cdeistopened\",\n    \"repoName\": \"skill-stack\",\n    \"file_path\": \".claude/skills/youtube-scriptwriting/references/structures.md\"\n  },\n  {\n    \"name\": \"youtube-scriptwriting/references/retention\",\n    \"description\": \"Retention Techniques reference covering the psychology of decaying viewer attention and how to reset it. Includes the Problem-Desire-Delay rehook formula (every 30–60 seconds for short-form, 2–3 min for long-form), the Second-Best-First ordering rule, setups and payoffs to create tension, the Value Loop (Context → Application → Framing), emotional variety techniques, and the Binge Loop outro formula. Use when retention is dropping mid-video.\",\n    \"repoOwnerUsername\": \"cdeistopened\",\n    \"repoName\": \"skill-stack\",\n    \"file_path\": \".claude/skills/youtube-scriptwriting/references/retention.md\"\n  },\n  {\n    \"name\": \"youtube-scriptwriting/references/editing\",\n    \"description\": \"Editing & Quality Audits reference with three post-draft review passes: Story Flow Audit (remove tangents, maintain a single clear thread), Comprehension Audit (6th-grade vocabulary, short sentences, active voice, restate twice, name frameworks), and Speed-to-Value Audit (value signaled in first 3 seconds, regular rehooks, satisfying outro). Includes a final read-through checklist and a common-fixes summary table. Use when a script feels clunky, confusing, or isn't holding attention.\",\n    \"repoOwnerUsername\": \"cdeistopened\",\n    \"repoName\": \"skill-stack\",\n    \"file_path\": \".claude/skills/youtube-scriptwriting/references/editing.md\"\n  }\n]"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "f920d9f5-4c66-4331-907c-0cfc32a4dbef",
+            "name": "Set GitHub Repo URLs",
+            "type": "n8n-nodes-base.set",
+            "position": [
+                256,
+                96
+            ],
+            "typeVersion": 3.4
+        },
+        {
+            "parameters": {
+                "content": "Aqui, utiliza-se a requisição HTTP em vez do nó nativo do GitHub porque este retorna um valor em base 64, enquanto que no nó HTTP podemos solicitar o valor como um arquivo de texto através dos cabeçalhos.",
+                "height": 224,
+                "width": 560,
+                "color": 7
+            },
+            "id": "10bf2235-9cc3-4419-8797-06aa50e2d0ee",
+            "name": "Sticky Note1",
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                1040,
+                544
+            ],
+            "typeVersion": 1
+        },
+        {
+            "parameters": {},
+            "id": "9bbe8a45-27f9-418d-98e0-0298a1d4c9b1",
+            "name": "Simple Memory",
+            "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+            "position": [
+                912,
+                480
+            ],
+            "typeVersion": 1.3
+        },
+        {
+            "parameters": {
+                "content": "## Interação com o chat\nVocê pode usar isso com a janela de bate-papo no canto inferior esquerdo ou ativando a opção `Make Available in n8n Chat Hub` para usá-lo no [hub de bate-papo](https://www.youtube.com/watch?v=s_GHteEnHc4)",
+                "height": 496,
+                "color": 7
+            },
+            "id": "7aefefd4-8cf8-4e3c-b65b-66159238c1d5",
+            "name": "Sticky Note",
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                -160,
+                -224
+            ],
+            "typeVersion": 1
+        },
+        {
+            "parameters": {
+                "content": "## TODO Adicione suas Skills\nVocê pode usar qualquer habilidade disponível publicamente no GitHub.\n\nJá foram selecionados os repositórios de [Skills Repo](https://github.com/anthropics/skills) e [Knowledge Work Skills](https://github.com/anthropics/knowledge-work-plugins) de exemplo da Anthropics.\n\nSe você adicionar mais habilidades, certifique-se de usar a mesma sintaxe de array.",
+                "height": 496,
+                "width": 256,
+                "color": 3
+            },
+            "id": "616fc41b-6d0c-4532-b8be-93e26568fb8d",
+            "name": "Sticky Note3",
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                176,
+                -224
+            ],
+            "typeVersion": 1
+        },
+        {
+            "parameters": {
+                "content": "## Um Agente Comum\nVocê pode ir além! Adicione qualquer outra ferramenta que desejar ou inclua configurações no prompt do sistema para atender às suas necessidades!",
+                "height": 272,
+                "width": 496,
+                "color": 7
+            },
+            "id": "c4df450f-2302-4320-a8e2-81309f6a6b4e",
+            "name": "Sticky Note4",
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                656,
+                -32
+            ],
+            "typeVersion": 1
+        },
+        {
+            "parameters": {
+                "content": "## Como o Agente Usa as Skills\nO agente usa a opção `List Files by Path Name` sempre que necessário para explorar o repositório de habilidades de arquivos. A opção `Get a File From GitHub` retorna o texto completo dos arquivos Markdown das habilidades.\n\nIsso imita exatamente como as habilidades funcionam no Claude Code ou no Open Code.\n",
+                "height": 464,
+                "width": 560,
+                "color": 7
+            },
+            "id": "2fb56032-ae57-4d8a-bb01-6f9801da205e",
+            "name": "Sticky Note5",
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                1040,
+                304
+            ],
+            "typeVersion": 1
+        },
+        {
+            "parameters": {
+                "content": "## Substitua-me\nSe quiser, troque pelo provedor e modelo de sua preferência!\n\nTalvez você possa escolher um em nosso [Benchmark de IA](https://n8n.io/ai-benchmark)",
+                "height": 320,
+                "width": 256
+            },
+            "id": "d021b96e-66fb-485d-9446-96b00dcd9179",
+            "name": "Sticky Note7",
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                592,
+                288
+            ],
+            "typeVersion": 1
+        },
+        {
+            "parameters": {
+                "public": true,
+                "options": {}
+            },
+            "id": "7f9b8e25-0d7b-4218-807d-a6a6066e49aa",
+            "name": "When chat message received",
+            "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+            "position": [
+                -96,
+                96
+            ],
+            "webhookId": "3611645b-0df7-4c25-8d3b-f4abb9b01fb7",
+            "typeVersion": 1.4
+        },
+        {
+            "parameters": {
+                "model": {
+                    "__rl": true,
+                    "value": "gpt-4o-mini",
+                    "mode": "list",
+                    "cachedResultName": "gpt-4o-mini"
+                },
+                "builtInTools": {
+                    "webSearch": {
+                        "searchContextSize": "low"
+                    }
+                },
+                "options": {}
+            },
+            "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+            "typeVersion": 1.3,
+            "position": [
+                688,
+                480
+            ],
+            "id": "ed05b46c-4a54-4749-824d-9480aa0dfa5e",
+            "name": "OpenAI Chat Model",
+            "credentials": {
+                "openAiApi": {
+                    "id": "QeFNS3Wu3SAbA6cQ",
+                    "name": "OpenAI account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "toolDescription": "Lê o conteúdo de texto de um arquivo no GitHub a partir da organização, do nome do repositório e do caminho para o arquivo.",
+                "url": "=https://api.github.com/repos/{{ $fromAI(\"repoOwnerUsername\", \"UserId do owner do repostório\", \"string\") }}/{{ $fromAI(\"repoName\", \"Nome do repositório\", \"string\") }}/contents/{{ $fromAI(\"File_Path\", \"Path do arquivo no repositório\", \"string\") }}",
+                "authentication": "predefinedCredentialType",
+                "nodeCredentialType": "githubApi",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Accept",
+                            "value": "application/vnd.github.raw+json"
+                        },
+                        {
+                            "name": "X-GitHub-Api-Version",
+                            "value": "2022-11-28"
+                        }
+                    ]
+                },
+                "options": {
+                    "redirect": {
+                        "redirect": {}
+                    }
+                }
+            },
+            "id": "3fb8cb6a-d6fa-4740-91ea-cddd96885253",
+            "name": "get_file_from_github",
+            "type": "n8n-nodes-base.httpRequestTool",
+            "position": [
+                1248,
+                640
+            ],
+            "typeVersion": 4.4,
+            "credentials": {
+                "githubApi": {
+                    "id": "hEH1l3ranG4xJGP7",
+                    "name": "GitHub account"
+                }
+            }
+        }
+    ],
+    "pinData": {
+        "When chat message received": [
+            {
+                "json": {
+                    "action": "sendMessage",
+                    "sessionId": "fcb1fedb5f3e4b7f8dc00dae2fb01cad",
+                    "chatInput": "ME ajude a criar um roteiro para um shorts do Youtube falando sobre o poder do uso de Agent Skills no n8n"
+                },
+                "pairedItem": {
+                    "item": 0
+                }
+            }
+        ]
+    },
+    "connections": {
+        "Simple Memory": {
+            "ai_memory": [
+                [
+                    {
+                        "node": "AI Agent",
+                        "type": "ai_memory",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Set GitHub Repo URLs": {
+            "main": [
+                [
+                    {
+                        "node": "AI Agent",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "When chat message received": {
+            "main": [
+                [
+                    {
+                        "node": "Set GitHub Repo URLs",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "OpenAI Chat Model": {
+            "ai_languageModel": [
+                [
+                    {
+                        "node": "AI Agent",
+                        "type": "ai_languageModel",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "get_file_from_github": {
+            "ai_tool": [
+                [
+                    {
+                        "node": "AI Agent",
+                        "type": "ai_tool",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "AI Agent": {
+            "main": [
+                []
+            ]
+        }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1",
+        "binaryMode": "separate"
+    },
+    "versionId": "8717aa20-2b85-45cd-84b4-2c7672e2d473",
+    "meta": {
+        "templateCredsSetupCompleted": true,
+        "instanceId": "4e474214bcf60c1518d0b243ca48faad8775bf534b0cde8f194334c4a5c35e19"
+    },
+    "id": "9RhY4cDyw4KjhDOB",
+    "tags": [
+        {
+            "updatedAt": "2026-04-16T12:19:02.109Z",
+            "createdAt": "2026-04-16T12:19:02.109Z",
+            "id": "I9tD4lczMwDw6dKo",
+            "name": "n8n"
+        },
+        {
+            "updatedAt": "2026-04-16T12:19:05.392Z",
+            "createdAt": "2026-04-16T12:19:05.392Z",
+            "id": "kC6sEU5nThZelmA7",
+            "name": "Agents"
+        },
+        {
+            "updatedAt": "2026-03-17T12:42:41.500Z",
+            "createdAt": "2026-03-17T12:42:41.500Z",
+            "id": "EiThhqGbDI4RFTJt",
+            "name": "Julio Borges"
+        }
+    ]
+}
