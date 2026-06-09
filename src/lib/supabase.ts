@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import WebSocket from 'ws';
 
 export function getSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -14,5 +15,9 @@ export function getSupabaseClient() {
       persistSession: false,
       autoRefreshToken: false,
     },
+    realtime: {
+      transport: WebSocket as any,
+    },
   });
 }
+

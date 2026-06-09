@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Oferta } from './types.ts';
 import RadarGrid from './components/RadarGrid.tsx';
-import { Radio, RefreshCw, Send, HelpCircle, Copy, Check, Sparkles } from 'lucide-react';
+import { Radio, RefreshCw, Send, HelpCircle, Copy, Check, Sparkles, Sun, Moon } from 'lucide-react';
 import logoInfore from '../assets/logo.svg';
 
 export default function App() {
@@ -20,6 +20,23 @@ export default function App() {
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  // Dark Mode state
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    const savedTheme = localStorage.getItem('infore_theme');
+    if (savedTheme) return savedTheme === 'dark';
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('infore_theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('infore_theme', 'light');
+    }
+  }, [isDarkMode]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -225,23 +242,23 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] text-gray-900 font-sans">
+    <div className="min-h-screen bg-[#F9FAFB] dark:bg-slate-950 text-gray-900 dark:text-slate-100 font-sans transition-colors duration-300">
       {/* Top Banner and Brand Navbar */}
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-xs backdrop-blur-md px-6 sm:px-8 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:h-20">
+      <header className="sticky top-0 z-50 bg-white/95 dark:bg-slate-900/95 border-b border-gray-200 dark:border-slate-800 shadow-xs backdrop-blur-md px-6 sm:px-8 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:h-20 transition-colors duration-300">
         {/* Logo Group */}
         <div className="flex items-center gap-4">
           <img
             src={logoInfore}
             alt="Infore Logo"
             className="h-8 w-auto object-contain hover:scale-105 transition-transform duration-300 cursor-pointer"
-            style={{ filter: 'brightness(0)' }}
+            style={{ filter: isDarkMode ? 'none' : 'brightness(0)' }}
           />
-          <div className="border-l border-gray-200 pl-4 py-1">
-            <h1 className="text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight flex items-center gap-2">
+          <div className="border-l border-gray-200 dark:border-slate-700 pl-4 py-1">
+            <h1 className="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
               Radar de Oportunidades
-              <Radio className="w-5 h-5 text-blue-600 animate-pulse" />
+              <Radio className="w-5 h-5 text-blue-600 dark:text-blue-400 animate-pulse" />
             </h1>
-            <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mt-0.5">
+            <p className="text-xs text-gray-400 dark:text-slate-500 font-bold uppercase tracking-wider mt-0.5">
               Monitoramento Interno • Atualizado diariamente
             </p>
           </div>
@@ -249,13 +266,13 @@ export default function App() {
 
         {/* Navigation & Actions */}
         <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
-          <div className="flex bg-gray-200/80 p-1 rounded-xl">
+          <div className="flex bg-gray-200/80 dark:bg-slate-800/85 p-1 rounded-xl">
             <button
               onClick={() => setActiveTab('dashboard')}
               className={`px-5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 activeTab === 'dashboard'
-                  ? 'bg-white text-blue-700 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-400 shadow-sm'
+                  : 'text-gray-650 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
               Todas Ofertas
@@ -264,8 +281,8 @@ export default function App() {
               onClick={() => setActiveTab('docs')}
               className={`px-5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 activeTab === 'docs'
-                  ? 'bg-white text-blue-700 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-400 shadow-sm'
+                  : 'text-gray-650 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
               Configurar n8n
@@ -275,7 +292,7 @@ export default function App() {
           <button
             onClick={() => fetchData(true)}
             disabled={refreshing}
-            className="p-2 px-3 rounded-xl border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 transition cursor-pointer flex items-center gap-1.5 text-xs font-bold"
+            className="p-2 px-3 rounded-xl border border-gray-200 dark:border-slate-800 text-gray-600 dark:text-slate-350 bg-white dark:bg-slate-900 hover:bg-gray-50 dark:hover:bg-slate-800 transition cursor-pointer flex items-center gap-1.5 text-xs font-bold"
             title="Atualizar ofertas"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-blue-600' : ''}`} />
@@ -284,16 +301,24 @@ export default function App() {
 
           <button
             onClick={handleLogout}
-            className="p-2 px-4 rounded-xl border border-rose-200 text-rose-600 bg-rose-50/50 hover:bg-rose-50 hover:border-rose-300 transition cursor-pointer flex items-center gap-1.5 text-xs font-bold"
+            className="p-2 px-4 rounded-xl border border-rose-200 dark:border-rose-950/30 text-rose-600 dark:text-rose-450 bg-rose-50/50 dark:bg-rose-950/10 hover:bg-rose-50 dark:hover:bg-rose-950/20 hover:border-rose-300 dark:hover:border-rose-900 transition cursor-pointer flex items-center gap-1.5 text-xs font-bold"
             title="Sair do Painel"
           >
             <span>Sair</span>
           </button>
 
-          <div className="hidden lg:flex items-center gap-1 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-xl ml-1 text-right">
+          <button
+            onClick={() => setIsDarkMode(!isDarkMode)}
+            className="p-2 rounded-xl border border-gray-200 dark:border-slate-800 text-gray-650 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-gray-50 dark:hover:bg-slate-800 transition cursor-pointer flex items-center justify-center"
+            title={isDarkMode ? "Ativar Modo Claro" : "Ativar Modo Escuro"}
+          >
+            {isDarkMode ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-slate-500" />}
+          </button>
+
+          <div className="hidden lg:flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 px-3 py-1.5 rounded-xl ml-1 text-right">
             <div className="text-left">
-              <div className="text-[10px] font-bold text-gray-400 tracking-widest leading-none">STATUS DO FEED</div>
-              <div className="flex items-center gap-1 text-emerald-600 font-extrabold text-xs leading-none mt-1 uppercase">
+              <div className="text-[10px] font-bold text-gray-400 dark:text-slate-500 tracking-widest leading-none">STATUS DO FEED</div>
+              <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-extrabold text-xs leading-none mt-1 uppercase">
                 <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></span>
                 Operacional
               </div>
@@ -306,7 +331,7 @@ export default function App() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         
         {/* Banner Section */}
-        <div className="bg-radial from-slate-900 to-gray-950 text-white rounded-2xl p-6 sm:p-8 border border-slate-800 shadow-sm relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="bg-radial from-slate-900 to-gray-950 dark:from-slate-950 dark:to-black text-white rounded-2xl p-6 sm:p-8 border border-slate-800 dark:border-slate-900 shadow-sm relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2 relative z-10">
             <div className="inline-flex items-center gap-1.5 bg-blue-500/10 border border-blue-500/25 px-2.5 py-0.5 rounded-full text-xs text-blue-400 font-medium">
               <Sparkles className="w-3.5 h-3.5 animate-bounce" />
@@ -345,7 +370,7 @@ export default function App() {
 
         {/* Dynamic Alert on Test Webhook Sent */}
         {testSuccess && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3.5 flex items-center gap-3 text-sm text-blue-800 animate-fade-in shadow-xs">
+          <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 rounded-lg p-3.5 flex items-center gap-3 text-sm text-blue-800 dark:text-blue-300 animate-fade-in shadow-xs">
             <Check className="w-5 h-5 text-blue-600" />
             <span>
               <strong>Sucesso!</strong> Payload simulado com sucesso. O radar foi atualizado instantaneamente via endpoint de webhook.
@@ -392,28 +417,28 @@ export default function App() {
           </div>
         ) : (
           /* Integrations Documentation tab */
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8 space-y-6">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 shadow-sm p-6 sm:p-8 space-y-6">
             <div className="space-y-1">
-              <h2 className="text-xl font-bold text-gray-950">Como integrar sua automação n8n</h2>
-              <p className="text-xs text-gray-400">Desenvolvido sob o padrão Infore & Fazedor Confiável</p>
+              <h2 className="text-xl font-bold text-gray-950 dark:text-white">Como integrar sua automação n8n</h2>
+              <p className="text-xs text-gray-400 dark:text-slate-500">Desenvolvido sob o padrão Infore & Fazedor Confiável</p>
             </div>
 
-            <div className="space-y-4 text-sm text-gray-600 leading-relaxed">
+            <div className="space-y-4 text-sm text-gray-650 dark:text-slate-350 leading-relaxed">
               <p>
-                Este painel está totalmente exposto e pronto para receber dados periódicos ou em tempo real. No n8n, configure um node de <strong className="text-gray-900">HTTP Request</strong> apontando para o endpoint abaixo usando o método POST.
+                Este painel está totalmente exposto e pronto para receber dados periódicos ou em tempo real. No n8n, configure um node de <strong className="text-gray-900 dark:text-slate-250">HTTP Request</strong> apontando para o endpoint abaixo usando o método POST.
               </p>
 
               {/* Endpoint card */}
-              <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="bg-gray-50 dark:bg-slate-950 border border-gray-100 dark:border-slate-800/60 rounded-xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div className="space-y-1">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">ENDPOINT WEBHOOK</span>
-                  <div className="font-mono text-xs font-bold text-gray-950 pt-1">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/20 px-2 py-0.5 rounded border border-blue-100 dark:border-blue-900/30">ENDPOINT WEBHOOK</span>
+                  <div className="font-mono text-xs font-bold text-gray-950 dark:text-slate-200 pt-1">
                     POST {window.location.protocol}//{window.location.host}/api/webhooks/ofertas
                   </div>
                 </div>
                 <button
                   onClick={copyToClipboard}
-                  className="px-3.5 py-1.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 self-stretch md:self-auto justify-center cursor-pointer transition-all"
+                  className="px-3.5 py-1.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-lg text-xs font-semibold flex items-center gap-1.5 self-stretch md:self-auto justify-center cursor-pointer transition-all"
                 >
                   {copiedCurl ? (
                     <>
@@ -431,8 +456,8 @@ export default function App() {
 
               {/* Payload requirements section */}
               <div className="space-y-3 pt-2">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900">Formato esperado do Array de Ofertas (Payload JSON)</h3>
-                <pre className="bg-slate-950 text-slate-300 p-4 rounded-xl text-[11px] font-mono overflow-x-auto border border-slate-800 leading-normal">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900 dark:text-slate-250">Formato esperado do Array de Ofertas (Payload JSON)</h3>
+                <pre className="bg-slate-950 dark:bg-black text-slate-300 p-4 rounded-xl text-[11px] font-mono overflow-x-auto border border-slate-800 dark:border-slate-900 leading-normal">
 {`[
   {
     "titulo": "Monitor Gamer LG UltraWide 29 IPS 75Hz",
@@ -446,11 +471,11 @@ export default function App() {
                 </pre>
               </div>
 
-              <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4 text-xs text-blue-800 flex items-start gap-2.5">
+              <div className="bg-blue-50/50 dark:bg-blue-950/10 border border-blue-100 dark:border-blue-900/20 rounded-xl p-4 text-xs text-blue-800 dark:text-blue-300 flex items-start gap-2.5">
                 <HelpCircle className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                 <div className="space-y-1">
                   <strong>Nota sobre o Banco de Dados (Supabase):</strong>
-                  <p className="text-blue-900/80 leading-normal">
+                  <p className="text-blue-900/80 dark:text-blue-300/80 leading-normal">
                     Toda vez que este endpoint recebe uma nova lista, todos os registros anteriores são excluídos automaticamente (deletados) antes de gravar sob o novo payload recebido para garantir consistência pura diariamente.
                   </p>
                 </div>
@@ -461,15 +486,15 @@ export default function App() {
       </main>
 
       {/* Footer Status */}
-      <footer className="bg-white border-t border-gray-200 px-8 py-5 flex flex-col sm:flex-row justify-between items-center gap-4 mt-16 shadow-2xs">
-        <div className="text-xs text-gray-400 font-medium font-sans">
+      <footer className="bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800 px-8 py-5 flex flex-col sm:flex-row justify-between items-center gap-4 mt-16 shadow-2xs">
+        <div className="text-xs text-gray-400 dark:text-slate-500 font-medium font-sans">
           © {new Date().getFullYear()} INFORE TECNOLOGIA • PLATAFORMA INTERNA
         </div>
         <div className="flex flex-wrap gap-4 items-center justify-center">
-          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-50 border border-gray-200 px-2.5 py-1 rounded-lg">
+          <div className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest bg-gray-50 dark:bg-slate-950 border border-gray-200 dark:border-slate-800 px-2.5 py-1 rounded-lg">
             Sincronização via n8n: OK
           </div>
-          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-50 border border-gray-200 px-2.5 py-1 rounded-lg">
+          <div className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest bg-gray-50 dark:bg-slate-950 border border-gray-200 dark:border-slate-800 px-2.5 py-1 rounded-lg">
             Base Supabase: {ofertas.length} {ofertas.length === 1 ? 'registro' : 'registros'}
           </div>
         </div>
