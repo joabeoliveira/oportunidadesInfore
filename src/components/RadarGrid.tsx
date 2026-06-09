@@ -1,18 +1,21 @@
 import React, { useState, useMemo } from 'react';
 import { Oferta } from '../types.ts';
-import { Search, ExternalLink, SlidersHorizontal, Tag, Layers, CheckCircle2, AlertCircle, Copy, Check, TrendingUp, Percent, Sparkles } from 'lucide-react';
+import { Search, ExternalLink, SlidersHorizontal, Tag, Layers, CheckCircle2, AlertCircle, Copy, Check, TrendingUp, Percent, Sparkles, Calculator } from 'lucide-react';
+import OfferSimulator from './OfferSimulator.tsx';
 
 interface RadarGridProps {
   initialOfertas: Oferta[];
   isConfigured: boolean;
+  token: string | null;
 }
 
-export default function RadarGrid({ initialOfertas, isConfigured }: RadarGridProps) {
+export default function RadarGrid({ initialOfertas, isConfigured, token }: RadarGridProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPlatform, setSelectedPlatform] = useState('Todas');
   const [minDiscount, setMinDiscount] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState<'default' | 'discount' | 'price_asc' | 'price_desc'>('default');
   const [copiedLinkId, setCopiedLinkId] = useState<string | number | null>(null);
+  const [activeSimulatorId, setActiveSimulatorId] = useState<string | number | null>(null);
 
   // Metrics Calculations (Global overview KPIs)
   const totalOfertas = initialOfertas.length;
@@ -387,7 +390,7 @@ export default function RadarGrid({ initialOfertas, isConfigured }: RadarGridPro
                     </div>
                   </div>
 
-                  {/* Action Link button & Copy button */}
+                  {/* Action Link button, Copy button & Precificar button */}
                   <div className="flex gap-2">
                     <a
                       href={oferta.url_afiliado}
@@ -397,6 +400,21 @@ export default function RadarGrid({ initialOfertas, isConfigured }: RadarGridPro
                     >
                       Acessar Oferta
                     </a>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const uniqueId = oferta.id || index;
+                        setActiveSimulatorId(activeSimulatorId === uniqueId ? null : uniqueId);
+                      }}
+                      className={`p-2 rounded-lg border transition cursor-pointer flex items-center justify-center ${
+                        activeSimulatorId === (oferta.id || index)
+                          ? 'bg-blue-50 border-blue-250 text-blue-650 dark:bg-blue-950/20 dark:border-blue-900 dark:text-blue-400'
+                          : 'bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-800 text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-800'
+                      }`}
+                      title="Simular precificação e orçamento"
+                    >
+                      <Calculator className="w-4 h-4" />
+                    </button>
                     <button
                       onClick={() => copyLink(oferta.url_afiliado, oferta.id || index)}
                       className={`p-2 rounded-lg border transition cursor-pointer flex items-center justify-center ${
@@ -413,6 +431,15 @@ export default function RadarGrid({ initialOfertas, isConfigured }: RadarGridPro
                       )}
                     </button>
                   </div>
+
+                  {/* Pricing Simulator Section */}
+                  {activeSimulatorId === (oferta.id || index) && (
+                    <OfferSimulator
+                      oferta={oferta}
+                      token={token}
+                      onClose={() => setActiveSimulatorId(null)}
+                    />
+                  )}
                 </div>
               </div>
             );

@@ -412,6 +412,7 @@ export default function App() {
               <RadarGrid
                 initialOfertas={ofertas}
                 isConfigured={isConfigured}
+                token={token}
               />
             )}
           </div>

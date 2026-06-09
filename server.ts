@@ -260,6 +260,229 @@ app.post('/api/webhooks/ofertas', async (req, res) => {
   }
 });
 
+// 4. Bitrix24 Integration: Search Contacts
+app.get('/api/bitrix/search-contacts', requireAuth, async (req, res) => {
+  const query = (req.query.query as string || '').trim();
+  const webhookUrl = process.env.BITRIX24_WEBHOOK_URL;
+
+  if (!webhookUrl) {
+    // Return mock contacts in simulation mode
+    const mockContacts = [
+      { ID: 'mock-1', NAME: 'Carlos', LAST_NAME: 'Silva (Infore Demo)', PHONE: '+55 11 98888-8888', EMAIL: 'carlos.silva@demo.com' },
+      { ID: 'mock-2', NAME: 'Ana', LAST_NAME: 'Souza (Infore Demo)', PHONE: '+55 21 97777-7777', EMAIL: 'ana.souza@demo.com' },
+      { ID: 'mock-3', NAME: 'Roberto', LAST_NAME: 'Santos (Infore Demo)', PHONE: '+55 31 96666-6666', EMAIL: 'roberto.santos@demo.com' }
+    ];
+    const filtered = mockContacts.filter(c => 
+      c.NAME.toLowerCase().includes(query.toLowerCase()) || 
+      c.LAST_NAME.toLowerCase().includes(query.toLowerCase())
+    );
+    return res.json(filtered);
+  }
+
+  try {
+    const response = await fetch(`${webhookUrl}/crm.contact.list`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        filter: { '%NAME': query },
+        select: ['ID', 'NAME', 'LAST_NAME', 'PHONE', 'EMAIL']
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Erro HTTP no Bitrix24: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const contacts = (data.result || []).map((c: any) => ({
+      ID: c.ID,
+      NAME: c.NAME || '',
+      LAST_NAME: c.LAST_NAME || '',
+      PHONE: c.PHONE && c.PHONE[0] ? c.PHONE[0].VALUE : '',
+      EMAIL: c.EMAIL && c.EMAIL[0] ? c.EMAIL[0].VALUE : ''
+    }));
+
+    return res.json(contacts);
+  } catch (err: any) {
+    console.error('Error searching contacts in Bitrix24:', err);
+    return res.status(500).json({ error: 'Erro ao buscar contatos no Bitrix24', details: err.message });
+  }
+});
+
+// 5. Bitrix24 Integration: Create Quote
+app.post('/api/bitrix/create-quote', requireAuth, async (req, res) => {
+  const {
+    title,
+    productName,
+    costPrice,
+    profitMargin,
+    shipping,
+    finalPrice,
+    link,
+    clientType,
+    clientId,
+    clientName,
+    clientPhone,
+    clientEmail,
+    assignedById,
+    quantity
+  } = req.body;
+
+  const webhookUrl = process.env.BITRIX24_WEBHOOK_URL;
+  const itemQuantity = Number(quantity) || 1;
+  const totalOpportunity = Math.round(Number(finalPrice) * itemQuantity * 100) / 100;
+
+  if (!webhookUrl) {
+    // Simulation Mode
+    console.log('Running in Bitrix24 simulation mode...');
+    const simulatedContactId = clientType === 'new' ? 'mock-contact-999' : clientId;
+    const simulatedQuoteId = Math.floor(Math.random() * 90000) + 10000;
+    return res.json({
+      success: true,
+      simulated: true,
+      quoteId: simulatedQuoteId,
+      url: `https://infore.bitrix24.com/crm/quote/show/${simulatedQuoteId}/`
+    });
+  }
+
+  try {
+    let contactId = clientId;
+
+    // Create contact if new
+    if (clientType === 'new') {
+      const contactResponse = await fetch(`${webhookUrl}/crm.contact.add`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fields: {
+            NAME: clientName,
+            OPENED: 'Y',
+            TYPE_ID: 'CLIENT',
+            PHONE: clientPhone ? [{ VALUE: clientPhone, VALUE_TYPE: 'WORK' }] : [],
+            EMAIL: clientEmail ? [{ VALUE: clientEmail, VALUE_TYPE: 'WORK' }] : [],
+            ...(assignedById ? { ASSIGNED_BY_ID: assignedById } : {})
+          }
+        })
+      });
+
+      if (!contactResponse.ok) {
+        const errText = await contactResponse.text();
+        throw new Error(`Erro ao cadastrar contato no Bitrix24: ${errText}`);
+      }
+
+      const contactData = await contactResponse.json();
+      contactId = contactData.result;
+    }
+
+    // Create Quote
+    const quoteResponse = await fetch(`${webhookUrl}/crm.quote.add`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fields: {
+          TITLE: title,
+          STATUS_ID: 'DRAFT',
+          CURRENCY_ID: 'BRL',
+          OPPORTUNITY: totalOpportunity,
+          CONTACT_ID: contactId,
+          COMMENTS: `Link de Compra: <a href="${link}" target="_blank">${link}</a>`,
+          ...(assignedById ? { ASSIGNED_BY_ID: assignedById } : {})
+        }
+      })
+    });
+
+    if (!quoteResponse.ok) {
+      const errText = await quoteResponse.text();
+      throw new Error(`Erro ao cadastrar orçamento no Bitrix24: ${errText}`);
+    }
+
+    const quoteData = await quoteResponse.json();
+    const quoteId = quoteData.result;
+
+    // Set Product Rows
+    const productResponse = await fetch(`${webhookUrl}/crm.quote.productrows.set`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: quoteId,
+        rows: [
+          {
+            PRODUCT_NAME: productName,
+            PRICE: finalPrice,
+            QUANTITY: itemQuantity
+          }
+        ]
+      })
+    });
+
+    if (!productResponse.ok) {
+      console.error('Warning: Failed to set product rows for quote:', quoteId);
+    }
+
+    // Extract domain name
+    let domain = 'infore.bitrix24.com';
+    try {
+      const urlObj = new URL(webhookUrl);
+      domain = urlObj.hostname;
+    } catch (e) {
+      // ignore
+    }
+
+    return res.json({
+      success: true,
+      quoteId,
+      url: `https://${domain}/crm/quote/show/${quoteId}/`
+    });
+
+  } catch (err: any) {
+    console.error('Error creating quote in Bitrix24:', err);
+    return res.status(500).json({ error: 'Erro ao criar orçamento no Bitrix24', details: err.message });
+  }
+});
+
+// 6. Bitrix24 Integration: Get Users
+app.get('/api/bitrix/users', requireAuth, async (req, res) => {
+  const webhookUrl = process.env.BITRIX24_WEBHOOK_URL;
+
+  if (!webhookUrl) {
+    // Return mock users/sellers in simulation mode
+    return res.json([
+      { ID: 'mock-user-1', NAME: 'Carlos', LAST_NAME: 'Oliveira', WORK_POSITION: 'Vendedor Sênior' },
+      { ID: 'mock-user-2', NAME: 'Renata', LAST_NAME: 'Mendes', WORK_POSITION: 'Vendedora Pleno' },
+      { ID: 'mock-user-3', NAME: 'Marcos', LAST_NAME: 'Sales', WORK_POSITION: 'Supervisor de Vendas' }
+    ]);
+  }
+
+  try {
+    const response = await fetch(`${webhookUrl}/user.get`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sort: 'NAME',
+        order: 'ASC',
+        filter: { ACTIVE: true }
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Erro HTTP no Bitrix24: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const users = (data.result || []).map((u: any) => ({
+      ID: u.ID,
+      NAME: u.NAME || '',
+      LAST_NAME: u.LAST_NAME || '',
+      WORK_POSITION: u.WORK_POSITION || ''
+    }));
+
+    return res.json(users);
+  } catch (err: any) {
+    console.error('Error fetching users from Bitrix24:', err);
+    return res.status(500).json({ error: 'Erro ao buscar usuários do Bitrix24', details: err.message });
+  }
+});
+
 // Configure Vite or production static serving
 async function setupViteOrStatic() {
   if (process.env.NODE_ENV !== 'production') {
