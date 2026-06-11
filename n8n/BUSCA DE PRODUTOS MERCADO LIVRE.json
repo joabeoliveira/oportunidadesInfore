@@ -1,5 +1,5 @@
 {
-  "name": "BUSCA DE PRODUTOS MERCADO LIVRE",
+  "name": "BUSCA DE PRODUTOS MERCADO LIVRE - V 4.0",
   "nodes": [
     {
       "parameters": {
@@ -22,8 +22,8 @@
       "type": "n8n-nodes-base.sort",
       "typeVersion": 1,
       "position": [
-        576,
-        336
+        672,
+        320
       ],
       "id": "d5935e32-09ed-493b-aba2-88b6ff726bae",
       "name": "MISTURAR"
@@ -47,8 +47,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        800,
-        336
+        896,
+        320
       ],
       "id": "be2edae9-322a-41f7-b73f-7291e58d1222",
       "name": "CARREGA HTML",
@@ -102,8 +102,8 @@
       "type": "n8n-nodes-base.html",
       "typeVersion": 1.2,
       "position": [
-        1024,
-        336
+        1120,
+        320
       ],
       "id": "7287f3fc-e894-413c-8a67-8cba50c1afa6",
       "name": "EXTRAI PRODUTOS"
@@ -284,8 +284,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        352,
-        336
+        448,
+        320
       ],
       "id": "b75b44b6-5959-4335-a51e-a8323e6f7ae1",
       "name": "LISTAR CATEGORIAS",
@@ -306,8 +306,8 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        128,
-        336
+        224,
+        320
       ],
       "id": "90b2f83d-7763-4118-b993-f20d8b31cff6",
       "name": "COOKIES",
@@ -352,8 +352,8 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
       "position": [
-        -96,
-        336
+        -176,
+        320
       ],
       "id": "c16f1c22-01a4-4b15-a637-6446baf89c89",
       "name": "TODO DIA AS 7"
@@ -371,7 +371,7 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
       "position": [
-        -80,
+        -112,
         864
       ],
       "id": "ec46024b-1d53-4b14-a4d3-6753ad74091e",
@@ -387,7 +387,7 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        144,
+        112,
         864
       ],
       "id": "52d853e6-e3d6-4cfc-9f97-90630d368ec4",
@@ -406,7 +406,7 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        192,
+        416,
         1088
       ],
       "id": "3a7dd79a-a353-46a1-ab07-1b6a12ede2b1",
@@ -525,8 +525,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        640,
-        1088
+        848,
+        1104
       ],
       "id": "ad5e509f-9175-41f2-88df-810c360ebae6",
       "name": "GERAR LINK DE AFILIADO",
@@ -534,13 +534,13 @@
     },
     {
       "parameters": {
-        "amount": 2
+        "amount": 4
       },
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        416,
-        1088
+        640,
+        1104
       ],
       "id": "33baddb5-6738-4975-a0a1-939352cbccac",
       "name": "WAIT",
@@ -552,7 +552,7 @@
       "typeVersion": 1,
       "position": [
         656,
-        912
+        944
       ],
       "id": "db414412-95d7-4f0d-a7e6-687ccd2d2702",
       "name": "END"
@@ -587,7 +587,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        -32,
+        128,
         1088
       ],
       "id": "e56eba46-d79e-43da-9748-616f9fdaf76c",
@@ -616,7 +616,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -240,
+        -112,
         1088
       ],
       "id": "ccb22c28-09d9-423c-a243-d74674368630",
@@ -624,13 +624,13 @@
     },
     {
       "parameters": {
-        "jsCode": "return {\n  urlAfiliado: $input.first().json.urls[0].short_url,\n  idProduto: $('LOOP').first().json.idProduto\n};"
+        "jsCode": "return {\n  urlAfiliado: $input.first().json.urls[0].short_url,\n  nomeProduto: $('LOOP').first().json.nomeProduto\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        864,
-        1152
+        1072,
+        1104
       ],
       "id": "03b58881-3562-4009-8641-4a654987f588",
       "name": "MAPEIA DADOS PARA PLANILHA"
@@ -650,7 +650,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{\n  $input.all().map(item => {\n    const d = item.json;\n    const toNumber = (v) => {\n      if (v === null || v === undefined) return 0;\n      const s = String(v).replace(/\\./g, '').replace(',', '.').replace(/[^\\d.-]/g, '');\n      return Number(s) || 0;\n    };\n    const precoStr = String(d.preco || d.Preço || '');\n    const parts = precoStr.split('\\n');\n    const originalPart = parts[0] || '';\n    const currentPart = (parts[1] || '').split(' ')[0] || '';\n    const precoOriginal = toNumber(d.precoOriginal || originalPart);\n    const precoDesconto = toNumber(d.precoAtual || currentPart || originalPart);\n    return {\n      titulo: String(d.nomeProduto || d.Nome || '').trim(),\n      preco_original: precoOriginal,\n      preco_desconto: precoDesconto,\n      url_afiliado: String(d.urlAfiliado || d.Link || '').trim(),\n      imagem_url: String(d.imagemProduto || d.Imagem || '').trim(),\n      plataforma: 'Mercado Livre'\n    };\n  })\n}}",
+        "jsonBody": "={{\n  $input.all().map(item => {\n    const d = item.json;\n    const toNumber = (v) => {\n      if (v === null || v === undefined) return 0;\n      const s = String(v).replace(/\\./g, '').replace(',', '.').replace(/[^\\d.-]/g, '');\n      return Number(s) || 0;\n    };\n    return {\n      titulo: String(d.nomeProduto || '').trim(),\n      preco_original: toNumber(d.precoOriginal),\n      preco_desconto: toNumber(d.precoAtual),\n      url_afiliado: String(d.urlAfiliado || '').trim(),\n      imagem_url: String(d.imagemProduto || '').trim(),\n      plataforma: 'Mercado Livre'\n    };\n  })\n}}",
         "options": {}
       },
       "id": "2d91ac21-3ba4-43ed-b3a8-98c95fcbee96",
@@ -708,10 +708,7 @@
             "nomeProduto": "={{ $json.nomeProduto }}",
             "imagemProduto": "={{ $json.imagemProduto }}",
             "preco": "={{ $json.preco }}",
-            "urlOriginal": "={{ $json.urlOriginal }}",
-            "precoOriginal": "={{ $json.precoOriginal }}",
-            "precoAtual": "={{ $json.precoAtual }}",
-            "desconto": "={{ $json.desconto }}"
+            "urlOriginal": "={{ $json.urlOriginal }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -1150,7 +1147,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -864,
+        -928,
         848
       ],
       "id": "adb96107-92b8-4597-a254-918cc5e97cc8",
@@ -1192,12 +1189,12 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "idProduto": "={{ $('LOOP').item.json.idProduto }}",
-            "urlAfiliado": "={{ $('LOOP').item.json.urlAfiliado }}",
-            "status": "PRONTO"
+            "urlAfiliado": "={{ $json.urlAfiliado }}",
+            "status": "PRONTO",
+            "nomeProduto": "={{ $json.nomeProduto }}"
           },
           "matchingColumns": [
-            "idProduto"
+            "nomeProduto"
           ],
           "schema": [
             {
@@ -1208,7 +1205,7 @@
               "display": true,
               "type": "string",
               "canBeUsedToMatch": true,
-              "removed": false
+              "removed": true
             },
             {
               "id": "nomeProduto",
@@ -1218,7 +1215,7 @@
               "display": true,
               "type": "string",
               "canBeUsedToMatch": true,
-              "removed": true
+              "removed": false
             },
             {
               "id": "imagemProduto",
@@ -1297,8 +1294,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        432,
-        912
+        1312,
+        1200
       ],
       "id": "bdf28952-ae85-4eea-9514-b7fc3922ef32",
       "name": "ATUALIZA PLANILHA COM AFILIADOS",
@@ -1330,6 +1327,9 @@
             {
               "lookupColumn": "status",
               "lookupValue": "PRONTO"
+            },
+            {
+              "lookupColumn": "urlAfiliado"
             }
           ]
         },
@@ -1417,28 +1417,39 @@
         2192
       ],
       "id": "cc6bcd0c-5d87-4abc-adb6-6ec0ee1227f0",
-      "name": "ACIONA TODOS OS DIA 8H",
-      "disabled": true
+      "name": "ACIONA TODOS OS DIA 8H"
     },
     {
       "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "triggerAtHour": 22
-            }
-          ]
-        }
+        "content": "# 🦎 BUSCA DE PRODUTOS MERCADO LIVRE\nEste workflow faz o scraping web de ofertas da página de promoções do Mercado Livre baseadas em termos de busca configurados, tratando os preços diretamente da interface HTML.\n\n---\n\n### 📊 Estrutura de Colunas da Planilha (`Modelo - Mercado Livre`)\n\n| Coluna | Descrição | Exemplo |\n| :--- | :--- | :--- |\n| **idProduto** | Hash MD5 ou identificador único baseado na URL | `ml_8cfcc04...` |\n| **nomeProduto** | Título do anúncio no Mercado Livre | `Console Playstation 5 825GB` |\n| **imagemProduto** | URL da imagem do anúncio | `https://http2.mlstatic.com/...` |\n| **preco** | Texto unificado de preços capturado da tela | `R$ 4.500\\nR$ 3.899\\n13% OFF` |\n| **urlOriginal** | URL limpa do produto no Mercado Livre | `https://www.mercadolivre.com.br/p/...` |\n| **urlAfiliado** | URL convertida com a tag de afiliado | `https://www.awin1.com/cread.php?...` |\n| **status** | Status atual do item | `Ativo` |\n| **success** | Indica se a extração correu bem | `true` |\n| **data** | Data e hora de processamento | `2026-06-06` |\n| **precoOriginal** | Preço antigo extraído via CSS selector | `4500.00` |\n| **precoAtual** | Preço com desconto aplicado | `3899.00` |\n| **desconto** | Porcentagem extraída do desconto | `13` |\n\n---\n\n### 🔄 Passos de Execução\n1. **Carregamento dos Cookies e Links**: Carrega as URLs-alvo de busca e injeta cookies de sessão para evitar bloqueios por robôs do Mercado Livre.\n2. **Carregamento do HTML**: Baixa o código de marcação HTML de cada página de busca.\n3. **Extração Seletiva (CSS)**: Extrai as listas de imagens, títulos, links e preços antigos/novos diretamente via coletores CSS.\n4. **Filtro de Qualidade**: Remove registros nulos, URLs de anúncios patrocinados externos, ou itens sem imagem válida.\n5. **Salvamento e Envio**: Atualiza a planilha no Google Sheets e envia o payload consolidado para a API de webhook do MVP.\n\n---\n\n### ⚠️ Regras Importantes e Solução de Erros\n* **Split de Preços**: No envio para a API, caso as colunas `precoOriginal` ou `precoAtual` estejam vazias por alteração de layout do ML, o script realiza um split baseado no caractere de quebra de linha `\\n` da coluna `preco` para reconstruir os valores.\n* **Bloqueio de IP**: Este workflow utiliza headers personalizados e `User-Agent` realistas para mitigar os bloqueios do robô do Mercado Livre durante as chamadas.\n",
+        "height": 880,
+        "width": 1184,
+        "color": 6
       },
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.3,
+      "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -96,
-        2496
+        -1488,
+        -96
       ],
-      "id": "1c6227ba-78a3-4912-b62e-97aab5e88eeb",
-      "name": "ACIONA 22H - LIMPA PLANILHA",
-      "disabled": true
+      "typeVersion": 1,
+      "id": "5742bcfa-f117-4859-a228-d359121832c1",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "![logo](https://gptgov.com.br/wp-content/uploads/2026/06/logo-infore.png)",
+        "height": 400,
+        "width": 1120,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -208,
+        -528
+      ],
+      "typeVersion": 1,
+      "id": "275afe0b-ff2e-4be0-b047-71d1b18b57d0",
+      "name": "Sticky Note8"
     },
     {
       "parameters": {
@@ -1462,8 +1473,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        144,
-        2496
+        32,
+        320
       ],
       "id": "294ea2d6-ae6c-4937-a550-71e8f569f14f",
       "name": "DELETA OS PRODUTOS DA PLANILHA",
@@ -1602,7 +1613,7 @@
       "main": [
         [
           {
-            "node": "COOKIES",
+            "node": "DELETA OS PRODUTOS DA PLANILHA",
             "type": "main",
             "index": 0
           }
@@ -1624,7 +1635,7 @@
       "main": [
         [
           {
-            "node": "ATUALIZA PLANILHA COM AFILIADOS",
+            "node": "END",
             "type": "main",
             "index": 0
           }
@@ -1697,7 +1708,7 @@
       "main": [
         [
           {
-            "node": "LOOP",
+            "node": "ATUALIZA PLANILHA COM AFILIADOS",
             "type": "main",
             "index": 0
           }
@@ -1757,7 +1768,7 @@
       "main": [
         [
           {
-            "node": "END",
+            "node": "LOOP",
             "type": "main",
             "index": 0
           }
@@ -1786,11 +1797,11 @@
         ]
       ]
     },
-    "ACIONA 22H - LIMPA PLANILHA": {
+    "DELETA OS PRODUTOS DA PLANILHA": {
       "main": [
         [
           {
-            "node": "DELETA OS PRODUTOS DA PLANILHA",
+            "node": "COOKIES",
             "type": "main",
             "index": 0
           }
@@ -1806,7 +1817,7 @@
     "callerPolicy": "workflowsFromSameOwner",
     "availableInMCP": false
   },
-  "versionId": "798e02aa-2abd-4450-86b8-fc3285249198",
+  "versionId": "2f56761e-1a28-4170-879d-c5f1592082e2",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "0435f3002e081a7fea4f6b9d9fb69e6d66a9ce283c409f889ee2eb8cc504ae5a"

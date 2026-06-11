@@ -1,0 +1,192 @@
+{
+  "name": "BUSCA DE PRODUTOS MARKETPLACES HTML",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "0f51ad7b-fdd1-4797-9e7c-70fc06fc6f80",
+      "name": "When clicking Execute workflow",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -720,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      plataforma: 'Kalunga',\n      termo: 'teclado logitech keyboard k120 c fio',\n      url: 'https://www.kalunga.com.br/busca/1?q=teclado-logitech-keybord-k120-c-fio',\n      baseUrl: 'https://www.kalunga.com.br',\n      referer: 'https://www.kalunga.com.br/',\n      maxProdutos: 20\n    }\n  }\n];"
+      },
+      "id": "57b0d76c-671f-485e-bd49-5088f080c5da",
+      "name": "CONFIGURAR BUSCA",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -500,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8"
+            },
+            {
+              "name": "accept-language",
+              "value": "pt-BR,pt;q=0.9"
+            },
+            {
+              "name": "user-agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "referer",
+              "value": "={{ $json.referer }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "string"
+            }
+          },
+          "timeout": 60000
+        }
+      },
+      "id": "1db2a71d-b1c9-408d-a7da-a641d1320b3d",
+      "name": "CARREGAR HTML",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -280,
+        220
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "jsCode": "const html = String($json.data || $json.body || '');\nconst cfg = $('CONFIGURAR BUSCA').first().json;\n\nconst decode = (value) => String(value || '')\n  .replace(/&amp;/g, '&')\n  .replace(/&quot;/g, '\"')\n  .replace(/&#39;/g, \"'\")\n  .replace(/&lt;/g, '<')\n  .replace(/&gt;/g, '>')\n  .replace(/&nbsp;/g, ' ')\n  .replace(/\\s+/g, ' ')\n  .trim();\n\nconst stripTags = (value) => decode(String(value || '')\n  .replace(/<script[\\s\\S]*?<\\/script>/gi, ' ')\n  .replace(/<style[\\s\\S]*?<\\/style>/gi, ' ')\n  .replace(/<[^>]+>/g, ' '));\n\nconst absoluteUrl = (url) => {\n  const raw = decode(url);\n  if (!raw) return '';\n  if (/^https?:\\/\\//i.test(raw)) return raw;\n  if (raw.startsWith('//')) return `https:${raw}`;\n  if (raw.startsWith('/')) return `${cfg.baseUrl}${raw}`;\n  return raw;\n};\n\nconst toNumber = (value) => {\n  const clean = String(value || '').replace(/\\./g, '').replace(',', '.').replace(/[^\\d.-]/g, '');\n  return Number(clean) || 0;\n};\n\nif (!html || html.length < 500 || /captcha|cloudflare|access denied|acesso negado/i.test(html)) {\n  return [{ json: { ofertas: [] } }];\n}\n\nconst priceRegex = /R\\$\\s*\\d{1,3}(?:\\.\\d{3})*,\\d{2}/g;\nconst linkRegex = /<a\\b[^>]*href=[\"']([^\"']+)[\"'][^>]*>([\\s\\S]{0,1800}?)<\\/a>/gi;\nconst seen = new Set();\nconst ofertas = [];\nlet match;\n\nwhile ((match = linkRegex.exec(html)) !== null && ofertas.length < Number(cfg.maxProdutos || 20)) {\n  const href = match[1];\n  const linkHtml = match[0];\n  const nextHtml = html.slice(linkRegex.lastIndex, linkRegex.lastIndex + 1800);\n  const block = `${linkHtml} ${nextHtml}`;\n  const url = absoluteUrl(href).split('#')[0];\n\n  if (!url || seen.has(url)) continue;\n  if (!/kalunga\\.com\\.br/i.test(url)) continue;\n  if (/\\/busca|javascript:|mailto:|login|minha-conta|carrinho/i.test(url)) continue;\n\n  const prices = block.match(priceRegex) || [];\n  if (!prices.length) continue;\n\n  const titleAttr = (block.match(/(?:title|aria-label)=[\"']([^\"']{8,180})[\"']/i) || [])[1];\n  const altAttr = (block.match(/alt=[\"']([^\"']{8,180})[\"']/i) || [])[1];\n  const textTitle = stripTags(match[2]).slice(0, 180);\n  const titulo = decode(titleAttr || altAttr || textTitle);\n  const image = (block.match(/<img[^>]+(?:src|data-src|data-original)=[\"']([^\"']+)[\"']/i) || [])[1];\n  const precoDesconto = toNumber(prices[0]);\n  const precoOriginal = toNumber(prices[1] || prices[0]);\n\n  if (!titulo || titulo.length < 8 || !precoDesconto) continue;\n\n  seen.add(url);\n  ofertas.push({\n    titulo,\n    preco_original: precoOriginal,\n    preco_desconto: precoDesconto,\n    url_afiliado: url,\n    imagem_url: absoluteUrl(image),\n    plataforma: cfg.plataforma\n  });\n}\n\nreturn [{ json: { ofertas } }];"
+      },
+      "id": "a22a8b6f-434e-40e5-8252-14e275a85b51",
+      "name": "EXTRAIR OFERTAS",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -60,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.OFERTAS_WEBHOOK_URL || 'http://localhost:3000/api/webhooks/ofertas' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ $env.WEBHOOK_SECRET || 'Bearer INFORE_MVP_TOKEN_2026' }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.ofertas }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "7a04fb14-48a5-4f61-81a4-2611f11161cc",
+      "name": "ENVIAR PARA API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        180,
+        220
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "content": "## Busca Kalunga\n\nFluxo minimo para importar no n8n.\n\n1. Ajuste o termo e a URL em CONFIGURAR BUSCA.\n2. Execute manualmente.\n3. Confira a saida do node EXTRAIR OFERTAS.\n4. Configure OFERTAS_WEBHOOK_URL e WEBHOOK_SECRET no ambiente do n8n.",
+        "height": 260,
+        "width": 420
+      },
+      "id": "ebc981d9-1342-4d40-93fd-e6f539c2a955",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -520,
+        -100
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking Execute workflow": {
+      "main": [
+        [
+          {
+            "node": "CONFIGURAR BUSCA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CONFIGURAR BUSCA": {
+      "main": [
+        [
+          {
+            "node": "CARREGAR HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CARREGAR HTML": {
+      "main": [
+        [
+          {
+            "node": "EXTRAIR OFERTAS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EXTRAIR OFERTAS": {
+      "main": [
+        [
+          {
+            "node": "ENVIAR PARA API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "",
+  "meta": {
+    "instanceId": "0435f3002e081a7fea4f6b9d9fb69e6d66a9ce283c409f889ee2eb8cc504ae5a"
+  },
+  "tags": []
+}

@@ -330,7 +330,7 @@ app.post('/api/bitrix/create-quote', requireAuth, async (req, res) => {
 
   const webhookUrl = process.env.BITRIX24_WEBHOOK_URL;
   const itemQuantity = Number(quantity) || 1;
-  const totalOpportunity = Math.round(Number(finalPrice) * itemQuantity * 100) / 100;
+  const totalOpportunity = Math.round((Number(finalPrice) * itemQuantity + Number(shipping || 0)) * 100) / 100;
 
   if (!webhookUrl) {
     // Simulation Mode
@@ -400,18 +400,28 @@ app.post('/api/bitrix/create-quote', requireAuth, async (req, res) => {
     const quoteId = quoteData.result;
 
     // Set Product Rows
+    const rows = [
+      {
+        PRODUCT_NAME: productName,
+        PRICE: finalPrice,
+        QUANTITY: itemQuantity
+      }
+    ];
+
+    if (Number(shipping) > 0) {
+      rows.push({
+        PRODUCT_NAME: 'Frete',
+        PRICE: Number(shipping),
+        QUANTITY: 1
+      });
+    }
+
     const productResponse = await fetch(`${webhookUrl}/crm.quote.productrows.set`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         id: quoteId,
-        rows: [
-          {
-            PRODUCT_NAME: productName,
-            PRICE: finalPrice,
-            QUANTITY: itemQuantity
-          }
-        ]
+        rows
       })
     });
 

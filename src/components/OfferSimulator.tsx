@@ -160,9 +160,9 @@ export default function OfferSimulator({ oferta, token, onClose }: OfferSimulato
   // Calculated Pricing Values
   const precoCusto = oferta.preco_desconto;
   const precoComMargem = precoCusto * (1 + margin / 100);
-  const precoFinal = precoComMargem + customShipping;
+  const precoFinal = precoComMargem;
   const lucroNominal = precoComMargem - precoCusto;
-  const valorTotalOrcamento = precoFinal * quantity;
+  const valorTotalOrcamento = (precoFinal * quantity) + customShipping;
 
   // Handle Form Submission to create Quote
   const handleSubmit = async (e: React.FormEvent) => {
